@@ -1,6 +1,7 @@
 import type { ClassificationSummary, IncidentRecord } from '@wingcraft/types'
 import type { LabelHeuristics } from '@wingcraft/parser-heuristics'
 import type { PriorityRuleMap } from '@wingcraft/data'
+import { normalizeLogText } from '@wingcraft/parser-utils'
 
 export type ClassifierFn = (logText: string) => ClassificationSummary
 
@@ -9,13 +10,11 @@ export interface ClassifierConfig {
   priorityRules: PriorityRuleMap
 }
 
-const normalize = (text: string): string => text.toLowerCase()
-
 export function createClassifier(config: ClassifierConfig): ClassifierFn {
   const { heuristics, priorityRules } = config
 
   return function classifyIncident(logText: string): ClassificationSummary {
-    const normalized = normalize(logText)
+    const normalized = normalizeLogText(logText)
     let best:
       | {
           label: IncidentRecord['label']

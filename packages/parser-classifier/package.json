@@ -18,6 +18,7 @@
   "dependencies": {
     "@wingcraft/data": "file:../data",
     "@wingcraft/parser-heuristics": "file:../parser-heuristics",
+    "@wingcraft/parser-utils": "file:../parser-utils",
     "@wingcraft/types": "file:../types"
   }
 }

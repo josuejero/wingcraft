@@ -11,6 +11,7 @@
   "references": [
     { "path": "../types" },
     { "path": "../data" },
-    { "path": "../parser-heuristics" }
+    { "path": "../parser-heuristics" },
+    { "path": "../parser-utils" }
   ]
 }

@@ -21,6 +21,7 @@
     "@wingcraft/parser-heuristics": "file:../parser-heuristics",
     "@wingcraft/parser-classifier": "file:../parser-classifier",
     "@wingcraft/parser-builder": "file:../parser-builder",
+    "@wingcraft/parser-core": "file:../parser-core",
     "@wingcraft/types": "file:../types"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@wingcraft/parser-builder",
+  "name": "@wingcraft/parser-core",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
@@ -16,8 +16,10 @@
     "build": "tsc -b"
   },
   "dependencies": {
+    "@wingcraft/data": "file:../data",
+    "@wingcraft/parser-builder": "file:../parser-builder",
+    "@wingcraft/parser-classifier": "file:../parser-classifier",
     "@wingcraft/parser-heuristics": "file:../parser-heuristics",
-    "@wingcraft/parser-utils": "file:../parser-utils",
     "@wingcraft/types": "file:../types"
   }
 }

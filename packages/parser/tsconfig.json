@@ -12,7 +12,9 @@
     { "path": "../types" },
     { "path": "../data" },
     { "path": "../parser-heuristics" },
+    { "path": "../parser-utils" },
     { "path": "../parser-classifier" },
-    { "path": "../parser-builder" }
+    { "path": "../parser-builder" },
+    { "path": "../parser-core" }
   ]
 }
