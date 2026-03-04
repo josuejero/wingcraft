@@ -1,0 +1,16 @@
+id: phase3-013
+title: Network allocation mismatch
+env_file: env/network-mismatch.env
+config_template: network-mismatch
+description: |
+  Pterodactyl allocates 10.0.0.5:25575 but the server still binds only to localhost, so health checks inside the container fail.
+breaking_files:
+  - server.properties
+  - network-note.txt
+log_signature: scripts/fault-injector/network-mismatch.sh
+safe_first_step: Pause the load balancer, document Docker/Pterodactyl network settings, and align `server-ip`/port with the allocated address before restarting.
+reset_script: scripts/reset-network-mismatch.sh
+fault_injections:
+  - scripts/fault-injector/network-mismatch.sh
+notes:
+  - The Pterodactyl networking guide explicitly calls out container vs. host localhost differences, which this scenario demonstrates.

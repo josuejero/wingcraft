@@ -58,10 +58,10 @@ function App() {
     <div className="app-shell">
       <header>
         <div>
-          <p className="eyebrow">Wingcraft Phase 1</p>
+        <p className="eyebrow">Wingcraft Phase 3</p>
           <h1>Incident triage simulator</h1>
         </div>
-        <p className="subtitle">Paste raw log text, inspect the classifier’s interpretation, and compare it to the seeded evidence.</p>
+        <p className="subtitle">Paste raw log text, inspect the classifier’s interpretation, and follow the Phase 3 incident catalog in `docs/phase3-incidents.md`.</p>
       </header>
 
       <section className="grid">
@@ -166,7 +166,7 @@ function App() {
             </article>
           ))}
         </div>
-        <p className="footnote">All 15 incidents live in <code>packages/data/incidents.json</code> and are published via <code>@wingcraft/data</code>.</p>
+        <p className="footnote">All 15 Phase 3 incidents live in <code>packages/data/incidents.json</code>, are cataloged in <code>docs/phase3-incidents.md</code>, and are published via <code>@wingcraft/data</code>.</p>
       </section>
     </div>
   )

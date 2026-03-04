@@ -1,0 +1,6 @@
+name: BetterJoin
+main: com.wingcraft.lab.BetterJoin
+version: 1.4
+api-version: 1.18
+libraries:
+  - libs/bukkit-legacy-1.18.jar

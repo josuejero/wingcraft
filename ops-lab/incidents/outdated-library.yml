@@ -1,0 +1,16 @@
+id: phase3-002
+title: Outdated library dependency
+env_file: env/outdated-library.env
+config_template: outdated-library
+description: |
+  Legacy plugin bundles Netty 4.0 while Paper already ships Netty 4.1+, so the class loader detects a missing class.
+breaking_files:
+  - plugins/LegacyNetBridge/plugin.yml
+  - plugins/LegacyNetBridge/libs/netty-4.0.0.jar
+log_signature: scripts/fault-injector/outdated-library.sh
+safe_first_step: Stop the server, snapshot the plugin and `libs/`, then replace it with a build targeting this Paper version.
+reset_script: scripts/reset-outdated-library.sh
+fault_injections:
+  - scripts/fault-injector/outdated-library.sh
+notes:
+  - PaperMC docs advise verifying plugin dependencies before update; this scenario mirrors that guidance.

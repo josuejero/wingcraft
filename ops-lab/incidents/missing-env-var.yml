@@ -1,0 +1,15 @@
+id: phase3-011
+title: Missing environment variable in wrapper
+env_file: env/missing-env-var.env
+config_template: missing-env-var
+description: |
+  The wrapper expects `WORLD_NAME` and `JAVA_HOME` but the env file omits them, so the script aborts before launching.
+breaking_files:
+  - start-wrapper.sh
+log_signature: scripts/fault-injector/missing-env-var.sh
+safe_first_step: Source the wrapper's required environment variables or provide them via `.env` before trying again.
+reset_script: scripts/reset-missing-env-var.sh
+fault_injections:
+  - scripts/fault-injector/missing-env-var.sh
+notes:
+  - Documenting required env vars is a Pillar of our safe-first steps, and Pterodactyl's docs highlight wrapper scripts needing variables.

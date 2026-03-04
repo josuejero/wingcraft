@@ -29,5 +29,11 @@ A private operations lab plus public parser frontend for realistic PaperMC incid
 3. **Parser validation** – `npm run test` (alias for `@wingcraft/parser`’s validation) to ensure seeded samples produce the expected label, priority, and escalation decisions.
 4. **Frontend** – `cd frontend && npm run dev` to launch the static UI; `npm run build --workspace frontend` prepares `frontend/dist` for GitHub Pages, and `npm run build:all` compiles every workspace end-to-end.
 
+## Phase 3 reproducible incidents
+
+The current parser/catalog now surfaces the 15 Phase 3 reproducible incidents documented in `docs/phase3-incidents.md`. Each entry points to its template under `ops-lab/configs/templates/<scenario>`, the emitted log signature, the safe-first action, and a scenario-specific reset script so you can rerun the evidence exactly.
+
+Ops Lab incident manifests under `ops-lab/incidents/*.yml` and the reset helpers in `ops-lab/scripts/reset-*.sh` keep the reproducible workflows in sync with the dataset consumed by `@wingcraft/data`.
+
 ## Deploying the frontend
 The workflow at `.github/workflows/pages.yml` builds the Vite app and pushes `frontend/dist` to `gh-pages`. The site is a read-only recruiter demo; all sensitive work is done through the private ops lab.

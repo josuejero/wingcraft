@@ -25,7 +25,13 @@ export const labelHeuristics: LabelHeuristics = {
       'starting papermc',
       'defaulting to offline mode',
       'startup aborted',
-      'could not find main class'
+      'could not find main class',
+      'bindexception',
+      'unsupportedclassversionerror',
+      'paper encountered an error',
+      'fatal config error',
+      'wrapper failed',
+      'environment variable'
     ],
     defaultCategory: 'startup',
     safeFirstStep: 'Stop the service, archive logs, and confirm the jar and JVM permissions before retrying.',
@@ -48,7 +54,10 @@ export const labelHeuristics: LabelHeuristics = {
       'plugin loader',
       'worldguard',
       'dynmap',
-      'authme'
+      'authme',
+      'circular dependency',
+      'noclassdeffounderror',
+      'nosuchmethoderror'
     ],
     defaultCategory: 'plugin',
     safeFirstStep: 'Stop the server, snapshot plugin/config, and disable the recently touched plugin or setting.',
@@ -70,7 +79,9 @@ export const labelHeuristics: LabelHeuristics = {
       'jdbc',
       'driver version',
       'sqlstate 08s01',
-      'communication link failure'
+      'communication link failure',
+      'saved with minecraft',
+      'supports up to'
     ],
     defaultCategory: 'configuration',
     safeFirstStep: 'Stop related services, compare declared versions, and back up the configs.',
@@ -83,7 +94,7 @@ export const labelHeuristics: LabelHeuristics = {
     defaultSeverity: 'MEDIUM'
   },
   'likely infrastructure issue': {
-    keywords: ['oom killer', 'failed to bind', 'connection refused', 'iostat', 'out of memory'],
+    keywords: ['oom killer', 'failed to bind', 'connection refused', 'iostat', 'out of memory', 'outofmemoryerror'],
     defaultCategory: 'infrastructure',
     safeFirstStep: 'Quiesce traffic, capture host metrics (network, sockets, disk), and take a snapshot before changing anything.',
     likelyCause: 'Excepted resource exhaustion or host-level conflict; not the application itself.',

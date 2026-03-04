@@ -1,0 +1,16 @@
+id: phase3-012
+title: Container memory headroom misconfiguration
+env_file: env/memory-headroom.env
+config_template: memory-headroom
+description: |
+  The JVM requests 6G while the container profile limits to 3G, so the heap quickly trips an OOM.
+breaking_files:
+  - server.properties
+  - memory-note.txt
+log_signature: scripts/fault-injector/memory-headroom.sh
+safe_first_step: Stop traffic, capture `docker inspect`/`docker stats`, and either lower `MAX_MEMORY` or request more container headroom.
+reset_script: scripts/reset-memory-headroom.sh
+fault_injections:
+  - scripts/fault-injector/memory-headroom.sh
+notes:
+  - Pterodactyl docs call out container memory headroom mismatches; this scenario follows that infrastructure guidance.

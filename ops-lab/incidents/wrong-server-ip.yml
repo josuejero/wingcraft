@@ -1,0 +1,15 @@
+id: phase3-004
+title: Wrong server-ip value
+env_file: env/wrong-server-ip.env
+config_template: wrong-server-ip
+description: |
+  `server-ip=192.168.99.123` is unreachable from the Compose bridge, so Paper cannot bind the world sockets.
+breaking_files:
+  - server.properties
+log_signature: scripts/fault-injector/wrong-server-ip.sh
+safe_first_step: Stop the JVM, change `server-ip` to `0.0.0.0` or blank, and restart so the container can bind.
+reset_script: scripts/reset-wrong-server-ip.sh
+fault_injections:
+  - scripts/fault-injector/wrong-server-ip.sh
+notes:
+  - PaperMC docs remind operators to keep `server-ip` blank inside containerized deployments to avoid bind issues.

@@ -1,0 +1,4 @@
+name: ChunkGuard
+main: com.wingcraft.lab.ChunkGuard
+version: 3.4
+api-version: 1.20

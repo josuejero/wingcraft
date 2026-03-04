@@ -1,0 +1,15 @@
+id: phase3-007
+title: Outdated Java version
+env_file: env/outdated-java.env
+config_template: outdated-java
+description: |
+  The start script forces `/opt/java11/bin/java` while PaperMC 1.20+ requires Java 17, leading to UnsupportedClassVersionError.
+breaking_files:
+  - start-server.sh
+log_signature: scripts/fault-injector/outdated-java.sh
+safe_first_step: Stop the service, point the wrapper to Java 17, and re-run `java -version` before attempting another boot.
+reset_script: scripts/reset-outdated-java.sh
+fault_injections:
+  - scripts/fault-injector/outdated-java.sh
+notes:
+  - PaperMC docs stress Java 17 as the minimum runtime since 1.20, so this scenario highlights a runtime mismatch.

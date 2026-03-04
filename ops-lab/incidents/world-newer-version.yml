@@ -1,0 +1,15 @@
+id: phase3-008
+title: World opened with newer Minecraft version
+env_file: env/world-newer-version.env
+config_template: world-newer-version
+description: |
+  The included world was saved with 1.20.4 while the running server only supports 1.19.4, so Paper rejects the level during load.
+breaking_files:
+  - world/level.dat
+log_signature: scripts/fault-injector/world-newer-version.sh
+safe_first_step: Stop the container, collect `world/level.dat` and `paper.yml` version metadata, and let the owning team know before downgrading.
+reset_script: scripts/reset-world-version.sh
+fault_injections:
+  - scripts/fault-injector/world-newer-version.sh
+notes:
+  - This scenario models the PaperMC recommendation to keep worlds aligned with the server's supported release.

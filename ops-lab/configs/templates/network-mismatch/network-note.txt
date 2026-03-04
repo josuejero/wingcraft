@@ -1,0 +1,1 @@
+Pterodactyl allocated 10.0.0.5:25575 but server is binding to localhost.

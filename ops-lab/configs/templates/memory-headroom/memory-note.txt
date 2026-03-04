@@ -1,0 +1,1 @@
+Container limit is set to 3G while MAX_MEMORY requests 6G – headroom mismatch.

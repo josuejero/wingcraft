@@ -1,0 +1,15 @@
+id: phase3-015
+title: Ambiguous crash with insufficient evidence
+env_file: env/ambiguous-crash.env
+config_template: ambiguous-crash
+description: |
+  A truncated crash report surfaces but doesn't include enough stack trace context, so we escalate per the docs.
+breaking_files:
+  - logs/crash-report.log
+log_signature: scripts/fault-injector/ambiguous-crash.sh
+safe_first_step: Stop the JVM if it keeps looping, gather the crash report and `docker inspect`, and hand off to escalation.
+reset_script: scripts/reset-ambiguous-crash.sh
+fault_injections:
+  - scripts/fault-injector/ambiguous-crash.sh
+notes:
+  - Documenting when to escalate is crucial; this scenario flags insufficient evidence and mimics the PaperMC escalation pattern.

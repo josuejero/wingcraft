@@ -1,0 +1,16 @@
+id: phase3-001
+title: Bad plugin jar
+env_file: env/bad-plugin-jar.env
+config_template: bad-plugin-jar
+description: |
+  Simulates a corrupted plugin jar; log output references a ZipException during plugin enable.
+breaking_files:
+  - plugins/BadJar/BadJar.jar
+  - plugins/BadJar/plugin.yml
+log_signature: scripts/fault-injector/bad-plugin-jar.sh
+safe_first_step: Stop accepting players, snapshot `plugins/BadJar`, and remove the corrupted jar before restarting.
+reset_script: scripts/reset-bad-plugin-jar.sh
+fault_injections:
+  - scripts/fault-injector/bad-plugin-jar.sh
+notes:
+  - PaperMC logs point to `java.util.zip.ZipException` when a jar is corrupted, so the scenario follows that pattern.

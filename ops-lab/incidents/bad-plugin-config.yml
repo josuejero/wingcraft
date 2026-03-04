@@ -1,0 +1,15 @@
+id: phase3-003
+title: Bad plugin config
+env_file: env/bad-plugin-config.env
+config_template: bad-plugin-config
+description: |
+  ChunkGuard's config file is malformed, and Paper fails to parse the Boolean value during boot.
+breaking_files:
+  - plugins/ChunkGuard/config.yml
+log_signature: scripts/fault-injector/bad-plugin-config.sh
+safe_first_step: Stop the server, back up `ChunkGuard/config.yml`, and revert the invalid setting or reload defaults.
+reset_script: scripts/reset-bad-plugin-config.sh
+fault_injections:
+  - scripts/fault-injector/bad-plugin-config.sh
+notes:
+  - Log review is the recommended first step according to PaperMC docs when config errors appear during plugin loading.

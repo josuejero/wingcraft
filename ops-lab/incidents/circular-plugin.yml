@@ -1,0 +1,15 @@
+id: phase3-009
+title: Circular plugin loading
+env_file: env/circular-plugin.env
+config_template: circular-plugin
+description: |
+  LoopHook declares `load-after: [LoopHook]` which immediately triggers a circular dependency error in the plugin loader.
+breaking_files:
+  - plugins/LoopHook/plugin.yml
+log_signature: scripts/fault-injector/circular-plugin.sh
+safe_first_step: Stop the server, move one of the conflicting plugins out of `plugins/`, and restart so Paper can load the remaining ones.
+reset_script: scripts/reset-circular-plugin.sh
+fault_injections:
+  - scripts/fault-injector/circular-plugin.sh
+notes:
+  - PaperMC plugin docs highlight `load-after` loops as a source of startup errors; this scenario mirrors that pattern.

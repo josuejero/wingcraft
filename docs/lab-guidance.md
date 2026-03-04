@@ -12,6 +12,8 @@ This portion of the lab is Compose-first: the Paper server is defined as a top-l
 ## Scenario management
 - Each incident profile keeps its own `.env` under `ops-lab/env/` (`baseline.env`, `plugin-crash.env`, etc.). Run `scripts/prepare-scenario.sh <scenario>` to seed the `paper_configs` volume from `configs/templates/<scenario>` and print the precise `docker compose --env-file` command to bring the lab up.
 - The scenario manifests in `ops-lab/incidents/*.yml` describe the profile, which env file to load, which templates to seed, and which fault-injector scripts belong to that incident. Use them to verify you are reproducing the correct evidence before starting the parser or UI.
+- The Phase 3 reproducible incident catalog is described in `docs/phase3-incidents.md` so safe-first steps, log signatures, broken files, and reset helpers stay aligned with the seeded dataset.
+- Use the scenario-specific reset helpers under `ops-lab/scripts/reset-*.sh` to archive, reseed, and replay each problem from a clean slate.
 - When you want a clean slate, `ops-lab/scripts/archive-reset.sh` backs up the volumes, tears the stack down, and removes the named volumes so the next `prepare-scenario` run starts from scratch.
 
 ## Fault injection toolkit

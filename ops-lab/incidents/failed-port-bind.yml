@@ -1,0 +1,15 @@
+id: phase3-005
+title: Failed bind to port
+env_file: env/failed-port-bind.env
+config_template: failed-port-bind
+description: |
+  The Compose stack keeps using port 25565 while another host service already owns it, so Paper can't bind.
+breaking_files:
+  - server.properties
+log_signature: scripts/fault-injector/failed-port-bind.sh
+safe_first_step: Drain traffic, inspect host sockets with `ss -tulpn`, and identify the process holding 25565 before restarting the lab.
+reset_script: scripts/reset-failed-port-bind.sh
+fault_injections:
+  - scripts/fault-injector/failed-port-bind.sh
+notes:
+  - Infrastructure-level bind failures are highlighted in the PaperMC docs as high-severity, so we treat them as P0 incidents.

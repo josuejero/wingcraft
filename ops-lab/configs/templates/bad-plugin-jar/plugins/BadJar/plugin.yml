@@ -1,0 +1,4 @@
+name: BadJar
+main: com.wingcraft.lab.BadJar
+version: 1.0
+api-version: 1.20

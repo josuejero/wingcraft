@@ -1,0 +1,16 @@
+id: phase3-014
+title: Plugin update required
+env_file: env/plugin-update-required.env
+config_template: plugin-update-required
+description: |
+  BetterJoin is built for Paper 1.18 and references APIs that no longer exist, so the loader reports NoSuchMethodError.
+breaking_files:
+  - plugins/BetterJoin/plugin.yml
+  - plugins/BetterJoin/libs/bukkit-legacy-1.18.jar
+log_signature: scripts/fault-injector/plugin-update-required.sh
+safe_first_step: Stop the server, quarantine the outdated plugin, and update to a version tested against this Paper release.
+reset_script: scripts/reset-plugin-update.sh
+fault_injections:
+  - scripts/fault-injector/plugin-update-required.sh
+notes:
+  - Plugin update guidance in PaperMC docs warns against reusing 1.18 builds on 1.20, so this scenario mirrors that best practice.

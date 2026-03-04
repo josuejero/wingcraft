@@ -1,0 +1,4 @@
+settings:
+  optimized: true
+  ticks-per: 20
+  malformed: "\u0000\xZZ"

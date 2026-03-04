@@ -1,0 +1,15 @@
+id: phase3-010
+title: Startup loop after config corruption
+env_file: env/config-corruption-loop.env
+config_template: config-corruption-loop
+description: |
+  A corrupted `paper.yml` contains invalid characters and forces the server into a restart loop that never finishes.
+breaking_files:
+  - paper.yml
+log_signature: scripts/fault-injector/config-corruption-loop.sh
+safe_first_step: Halt the container, restore a clean `paper.yml`, and only restart after verifying the file loads without repeated restarts.
+reset_script: scripts/reset-config-corruption.sh
+fault_injections:
+  - scripts/fault-injector/config-corruption-loop.sh
+notes:
+  - Safe-first steps for config corruption are documented in the PaperMC operations guide.

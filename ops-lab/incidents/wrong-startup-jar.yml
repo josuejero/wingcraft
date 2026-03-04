@@ -1,0 +1,16 @@
+id: phase3-006
+title: Wrong startup jar name
+env_file: env/wrong-startup-jar.env
+config_template: wrong-startup-jar
+description: |
+  Wrapper still points to `paper-server-old.jar` while the only jar present is `paperclip.jar`, so the JVM cannot find the file.
+breaking_files:
+  - start-server.sh
+  - paperclip.jar
+log_signature: scripts/fault-injector/wrong-startup-jar.sh
+safe_first_step: Stop the wrapper, correct the jar path (or rename the file to match), and restart once permissions are confirmed.
+reset_script: scripts/reset-wrong-startup-jar.sh
+fault_injections:
+  - scripts/fault-injector/wrong-startup-jar.sh
+notes:
+  - Startup scripts that reference the wrong artifact are a common support pitfall highlighted in PaperMC docs.
