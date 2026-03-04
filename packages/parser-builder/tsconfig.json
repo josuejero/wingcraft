@@ -8,11 +8,5 @@
     "types": ["node"]
   },
   "include": ["src"],
-  "references": [
-    { "path": "../types" },
-    { "path": "../data" },
-    { "path": "../parser-heuristics" },
-    { "path": "../parser-classifier" },
-    { "path": "../parser-builder" }
-  ]
+  "references": [{ "path": "../types" }, { "path": "../parser-heuristics" }]
 }

@@ -2,7 +2,7 @@
 
 1. **Evidence ingestion** – The Ops Lab log `logs/latest.log` records the lines `java.lang.IllegalArgumentException: Cannot set property 'world-edit' to 'true'` and `Loading plugin WorldGuard v7.0.5`. Paste that excerpt into the frontend textarea or run `@wingcraft/parser/buildTriageResult` with the same text.
 
-2. **Classification** – The parser matches keywords like `illegalargumentexception` and `loading plugin` to the `plugin/config conflict` label, classifies the severity as `HIGH`, maps to `P1`, and notes that the internal `fieldSources` indicate the configuration fields came from the `plugin/config conflict` template while the log-derived `evidenceLines` came from heuristics.
+2. **Classification** – The parser matches keywords like `illegalargumentexception` and `loading plugin` to the `plugin/config conflict` label, classifies the severity as `HIGH`, maps to `P1`, and notes that the internal `fieldSources` indicate the configuration fields came from the `plugin/config conflict` template while the log-derived `evidenceLines` came from heuristics. Under the hood, `@wingcraft/parser` wires `@wingcraft/parser-heuristics`, `@wingcraft/parser-classifier`, and `@wingcraft/parser-builder` together so each concern can be composed or replaced without changing the orchestrator.
 
 3. **Safe-first action** – The recommended safe step (also present in `packages/data/incidents.json` for incident `inc-002`) is to stop the server, snapshot `plugins`/`config`, and disable the conflicting plugin before editing files. The `ops-lab/scripts/stop-server.sh` script provides that stop step without touching live players.
 

@@ -1,16 +1,45 @@
 version: '3.9'
+
 services:
   paper:
-    image: itzg/paper:latest
+    image: "itzg/paper:${PAPER_IMAGE_TAG:-latest}"
     container_name: wingcraft-paper
+    env_file:
+      - env/common.env
     ports:
-      - '25565:25565'
-    volumes:
-      - './data:/data'
-      - './logs:/data/logs'
-      - './server.properties:/data/server.properties:ro'
+      - '${MINECRAFT_PORT:-25565}:25565'
     environment:
       EULA: 'TRUE'
+      MAX_MEMORY: '${MAX_MEMORY:-2G}'
+    volumes:
+      - paper_configs:/data
+      - paper_world:/data/world
+      - paper_logs:/data/logs
+    healthcheck:
+      test: ["CMD-SHELL","bash -c 'cat < /dev/tcp/127.0.0.1/${MINECRAFT_PORT:-25565} >/dev/null 2>&1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     tty: true
     stdin_open: true
-    restart: unless-stopped
+
+  fault-injector:
+    image: alpine:3.18
+    profiles: [fault-injector]
+    working_dir: /work
+    command: ["sleep", "infinity"]
+    volumes:
+      - ./scripts/fault-injector:/work
+      - paper_logs:/data/logs
+      - paper_configs:/data
+    depends_on:
+      - paper
+
+volumes:
+  paper_world:
+    name: wingcraft_paper_world
+  paper_logs:
+    name: wingcraft_paper_logs
+  paper_configs:
+    name: wingcraft_paper_configs

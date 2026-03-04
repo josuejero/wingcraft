@@ -1,0 +1,4 @@
+name: FaultyPlugin
+main: com.wingcraft.lab.FaultyPlugin
+version: 0.0.1
+description: Simulated plugin that always throws on enable

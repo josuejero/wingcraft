@@ -1,0 +1,13 @@
+id: baseline
+title: Baseline Paper startup
+env_file: env/baseline.env
+config_template: baseline
+description: |
+  The default lab state for practicing safe-first triage. No simulated faults are active
+  until a fault injector script is executed, so this manifest is a clean starting point.
+fault_injections:
+  - scripts/fault-injector/tick-lag.sh
+log_export: scripts/export-logs.sh
+notes:
+  - Run ./scripts/prepare-scenario.sh baseline before bringing up the stack.
+  - Use ./scripts/backup.sh to snapshot the volumes before experimenting.

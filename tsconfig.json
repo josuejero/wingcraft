@@ -4,6 +4,9 @@
   "references": [
     { "path": "./packages/types" },
     { "path": "./packages/data" },
+    { "path": "./packages/parser-heuristics" },
+    { "path": "./packages/parser-classifier" },
+    { "path": "./packages/parser-builder" },
     { "path": "./packages/parser" },
     { "path": "./frontend" }
   ]

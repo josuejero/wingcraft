@@ -1,23 +1,21 @@
 # Ops Lab Guidance
 
-This private lab mirrors the “safe first step, evidence-first, escalate when necessary” workflow described in Phase 1. The lab uses Docker Compose to run a PaperMC server inside `ops-lab/`, and the `scripts/` folder provides quick commands for the safe-first checklist.
+This portion of the lab is Compose-first: the Paper server is defined as a top-level `paper` service, persistent state lives in named volumes, and every incident profile lives behind its own `.env` so you can swap scenarios without touching the shared repo. `ops-lab/docker-compose.yml` wires a `paper` service with `paper_world`, `paper_logs`, and `paper_configs` volumes plus a health check so any dependent helpers wait for the server to finish booting.
 
 ## Safe-first checklist
-1. **Stop traffic** – run `ops-lab/scripts/stop-server.sh` before modifying plugins, properties, or files.
-2. **Back up** – `ops-lab/scripts/backup-logs.sh` copies the latest `logs/` directory so you can reference the exact evidence that triggered the incident.
-3. **Inspect** – `ops-lab/scripts/tail-logs.sh` and `ops-lab/scripts/collect-evidence.sh` gather the last 60 log lines, filtered logs, and container metadata.
-4. **Document** – the resulting `logs/evidence.log` and `logs/inspect.json` go into the incident record as “what evidence to collect.”
+1. **Stop traffic** – run `ops-lab/scripts/stop-server.sh` so the Compose stack shuts down cleanly before you edit configs or logs.
+2. **Back up** – `ops-lab/scripts/backup.sh` copies the contents of the world, log, and config volumes out to `backups/` (pass a directory argument to override the default timestamped path).
+3. **Inspect** – `ops-lab/scripts/tail-logs.sh` replays the last 60 lines and `ops-lab/scripts/collect-evidence.sh` saves timestamped logs, `docker compose ps`, and `docker inspect` metadata under `logs/` for the incident ticket.
+4. **Export logs** – `ops-lab/scripts/export-logs.sh` demonstrates the sample log export step by writing `docker compose logs` output into `exports/log-export-<timestamp>.log` so you can drop it into a report.
+5. **Document** – attach the generated files (`logs/evidence-*.log`, `logs/inspect-*.json`, `exports/log-export-*.log`) to your incident record, then share them with the parser or UI.
 
-## Reproducing seeded incidents
-Each of the 15 seeded incidents in `packages/data/incidents.json` (exported via `@wingcraft/data`) contains evidence lines that can be simulated via server log injection or config tweaks:
-- For **startup errors**, corrupt or rename `ops-lab/data/paperclip.jar` temporarily and watch the server refuse to start.
-- For **plugin/config conflicts**, edit `ops-lab/data/plugins/<plugin>/config.yml` or drop an incompatible jar into `ops-lab/data/plugins` and restart.
-- For **version mismatches**, set `server.properties` to a different protocol (`minecraft-protocol=1.16.5`) and watch the handshake logs.
-- For **infrastructure issues**, trigger port conflicts by starting another `paper` container or consume memory with `stress-ng` on the host.
-- For **needs escalation**, simulate provider outages by toggling the `backend` network or pointing backups at a local HTTP endpoint that returns 500.
+## Scenario management
+- Each incident profile keeps its own `.env` under `ops-lab/env/` (`baseline.env`, `plugin-crash.env`, etc.). Run `scripts/prepare-scenario.sh <scenario>` to seed the `paper_configs` volume from `configs/templates/<scenario>` and print the precise `docker compose --env-file` command to bring the lab up.
+- The scenario manifests in `ops-lab/incidents/*.yml` describe the profile, which env file to load, which templates to seed, and which fault-injector scripts belong to that incident. Use them to verify you are reproducing the correct evidence before starting the parser or UI.
+- When you want a clean slate, `ops-lab/scripts/archive-reset.sh` backs up the volumes, tears the stack down, and removes the named volumes so the next `prepare-scenario` run starts from scratch.
 
-## Connecting to the schema
-Every incident you reproduce should be logged using the schema in `packages/data/incident-schema.json`. Note how the schema lists the fields for category, affected component, safe first step, what to tell the customer, and whether escalation is required.
+## Fault injection toolkit
+The `ops-lab/scripts/fault-injector/` folder is the fault injector script set. Each script writes realistic log lines into `/data/logs/latest.log` inside the `wingcraft_paper_logs` volume; run them via `./scripts/fault-injector/run.sh <script.sh>` (the helper will invoke the `fault-injector` profile so it only runs when you ask for it). Pair the scripts with the manifests above to reenact plugin crashes, tick lag, or connection resets without editing the server jar itself.
 
-## Tying lab work to the parser/UI
-After collecting evidence, paste the relevant log excerpt into `frontend/` (or run `@wingcraft/parser/buildTriageResult` via Node). The parser modules reference `@wingcraft/data`, so the React UI can truthfully highlight which fields were seeded versus heuristically inferred.
+## Stretch target
+Once the Compose MVP behaves, consider the optional stretch plan: deploy Pterodactyl/Wings on a disposable Linux VM (root required, admin-heavy, and private) and show it in a recorded walkthrough. Follow the Pterodactyl docs for self-hosting, but keep that VM offline and outside this repository.

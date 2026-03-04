@@ -1,4 +1,4 @@
-import type { IncidentRecord } from './types.js'
+import type { IncidentRecord } from '@wingcraft/types'
 
 export type LabelHeuristic = {
   keywords: string[]

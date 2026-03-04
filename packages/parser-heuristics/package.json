@@ -1,5 +1,5 @@
 {
-  "name": "@wingcraft/parser",
+  "name": "@wingcraft/parser-heuristics",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
@@ -13,14 +13,9 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsc -b",
-    "test:parser": "npm run build && node ./dist/validate.js"
+    "build": "tsc -b"
   },
   "dependencies": {
-    "@wingcraft/data": "file:../data",
-    "@wingcraft/parser-heuristics": "file:../parser-heuristics",
-    "@wingcraft/parser-classifier": "file:../parser-classifier",
-    "@wingcraft/parser-builder": "file:../parser-builder",
     "@wingcraft/types": "file:../types"
   }
 }

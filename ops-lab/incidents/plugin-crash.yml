@@ -1,0 +1,14 @@
+id: plugin-crash
+title: Faulty plugin exception
+env_file: env/plugin-crash.env
+config_template: plugin-crash
+description: |
+  This scenario populates the FaultyPlugin directory and uses the injector to write
+  stack traces and warning lines that resemble a plugin failing while players join.
+fault_injections:
+  - scripts/fault-injector/plugin-stack.sh
+  - scripts/fault-injector/connection-spike.sh
+log_export: scripts/export-logs.sh
+notes:
+  - After sealing the scenario, run ./scripts/export-logs.sh so the evidence can be attached.
+  - Reset between runs with ./scripts/archive-reset.sh to avoid cross-contamination.
