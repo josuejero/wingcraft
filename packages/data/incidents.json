@@ -1,0 +1,332 @@
+[
+  {
+    "id": "inc-001",
+    "category": "startup",
+    "label": "startup error",
+    "severity": "CRITICAL",
+    "priority": "P0",
+    "affectedComponent": "PaperMC JVM",
+    "evidenceLines": [
+      "[Server thread/ERROR]: Unable to start Minecraft server",
+      "Exception in thread \"main\" java.lang.NoClassDefFoundError"
+    ],
+    "safeFirstStep": "Stop the server process, archive the current logs, and confirm the latest jar is intact.",
+    "likelyCause": "Corrupted Paper jar or missing JVM dependency after manual download.",
+    "customerMessage": "Startup failed because one of the server binaries is missing or unreadable; I'll verify the jar and JVM before resuming.",
+    "evidenceToCollect": [
+      "md5/v2 checksum of paperclip.jar",
+      "`java -version` output",
+      "full startup log (latest lines)"
+    ],
+    "escalate": true,
+    "resolutionNotes": "Replaced jar with a known-good download, verified checksum, and server boots cleanly."
+  },
+  {
+    "id": "inc-002",
+    "category": "plugin",
+    "label": "plugin/config conflict",
+    "severity": "HIGH",
+    "priority": "P1",
+    "affectedComponent": "WorldGuard + Paper config",
+    "evidenceLines": [
+      "[Server thread/ERROR]: java.lang.IllegalArgumentException: Cannot set property 'world-edit' to 'true'",
+      "[Server thread/INFO]: Loading plugin WorldGuard v7.0.5"
+    ],
+    "safeFirstStep": "Stop accepting player connections, snapshot `plugins` and `config` directories, and disable the suspect plugin.",
+    "likelyCause": "New WorldGuard config option contradicts Paper protection defaults.",
+    "customerMessage": "A recent config change is incompatible with Paper's protection defaults; I'm reverting the setting and verifying.",
+    "evidenceToCollect": [
+      "current `plugins/WorldGuard/config.yml`",
+      "`paper.yml` chunk-claim settings",
+      "Full stack trace around the plugin load"
+    ],
+    "escalate": false,
+    "resolutionNotes": "Pushed patched config via git; plugin loads after reapplying older option semantics."
+  },
+  {
+    "id": "inc-003",
+    "category": "configuration",
+    "label": "version mismatch",
+    "severity": "MEDIUM",
+    "priority": "P2",
+    "affectedComponent": "Apiary Bridge",
+    "evidenceLines": [
+      "[Async Chat Thread]: Connection refused: target version 1.16.5 while server is 1.20",
+      "Bridge reported ProtocolVersion 760 vs handshake 760"
+    ],
+    "safeFirstStep": "Stop the bridge service, note the server/proxy versions, and back up current configs.",
+    "likelyCause": "Proxy is still running 1.16 client handshake against Paper 1.20.",
+    "customerMessage": "The bridge is speaking the wrong protocol version; I'm stopping it and applying the matching build.",
+    "evidenceToCollect": [
+      "`paper.yml` target version field",
+      "Bridge log around the handshake",
+      "`git status` for deployment manifests"
+    ],
+    "escalate": false,
+    "resolutionNotes": "Rolled back proxy to 1.20-compatible build and restarted; connections succeeded."
+  },
+  {
+    "id": "inc-004",
+    "category": "infrastructure",
+    "label": "likely infrastructure issue",
+    "severity": "CRITICAL",
+    "priority": "P0",
+    "affectedComponent": "host network",
+    "evidenceLines": [
+      "[Server thread/WARN]: Failed to bind to port 25565: Address already in use",
+      "docker0 172.17.0.1:25565 -> 10.0.0.5:25565 (ESTABLISHED)"
+    ],
+    "safeFirstStep": "Disable traffic by removing the container from the load balancer, then inspect host-level sockets.",
+    "likelyCause": "Legacy process (maybe previous Paper container) still bound to 25565 on the host.",
+    "customerMessage": "The host is already using port 25565, so the server can't bind; I'm identifying the conflicting service before restarting.",
+    "evidenceToCollect": [
+      "`ss -tulpn | grep 25565` output",
+      "Docker ps/logs for any other Paper container",
+      "Host firewall rules"
+    ],
+    "escalate": true,
+    "resolutionNotes": "Stopped stale Paper container, freed port, and updated Compose to use a dedicated bridge network for clarity."
+  },
+  {
+    "id": "inc-005",
+    "category": "startup",
+    "label": "startup error",
+    "severity": "HIGH",
+    "priority": "P1",
+    "affectedComponent": "PaperMC startup script",
+    "evidenceLines": [
+      "Error: Unable to access jarfile /opt/paper/paper.jar",
+      "[init script] Starting server with NO_FILE permission"
+    ],
+    "safeFirstStep": "Stop the systemd unit, verify file permissions, and back up the jar directory.",
+    "likelyCause": "The paper.jar file lost execute/read rights after a sudo chown.",
+    "customerMessage": "The jar file's permissions changed, so the JVM can't run it yet; I'll restore ownership and verify safe start.",
+    "evidenceToCollect": [
+      "`ls -l /opt/paper/paper.jar`",
+      "`journalctl -u paper.service`",
+      "`id` of running user"
+    ],
+    "escalate": false,
+    "resolutionNotes": "Corrected file ownership, then started the service under the configured user."
+  },
+  {
+    "id": "inc-006",
+    "category": "plugin",
+    "label": "plugin/config conflict",
+    "severity": "MEDIUM",
+    "priority": "P2",
+    "affectedComponent": "AuthMe + Paper plugin loader",
+    "evidenceLines": [
+      "[Server thread/INFO]: Loading plugin AuthMe",
+      "java.lang.ClassNotFoundException: org.bukkit.plugin.RegisteredServiceProvider"
+    ],
+    "safeFirstStep": "Stop the server, snapshot the plugin jar versions, and check plugin manager compatibility notes.",
+    "likelyCause": "AuthMe jar is built against Bukkit API but current Paper removed the class.",
+    "customerMessage": "AuthMe is built for a different API release; I'm matching the plugin build to this server version before restarting.",
+    "evidenceToCollect": [
+      "`plugins/AuthMe/version.txt`",
+      "`paperclip.jar --version`",
+      "Release notes of the plugin"
+    ],
+    "escalate": false,
+    "resolutionNotes": "Swapped in plugin version compatible with current Paper; server loads cleanly."
+  },
+  {
+    "id": "inc-007",
+    "category": "dependency",
+    "label": "version mismatch",
+    "severity": "MEDIUM",
+    "priority": "P2",
+    "affectedComponent": "Database connector",
+    "evidenceLines": [
+      "[Async Chat Thread]: SQLState 08S01: Communication link failure",
+      "Driver version 1.2.4 (JDBC 4.0) vs server requiring 4.2"
+    ],
+    "safeFirstStep": "Stop the bridge service, take a config backup, and document driver versions.",
+    "likelyCause": "Old JDBC driver linking to new MySQL server.",
+    "customerMessage": "The connector library is incompatible with the database; I'm collecting evidence and will deploy the supported driver.",
+    "evidenceToCollect": [
+      "Driver jar manifest",
+      "MySQL server version string",
+      "Sync tool logs"
+    ],
+    "escalate": false,
+    "resolutionNotes": "Deployed JDBC 8.0.33, restarted service, and connections stabilized."
+  },
+  {
+    "id": "inc-008",
+    "category": "transport",
+    "label": "likely infrastructure issue",
+    "severity": "HIGH",
+    "priority": "P1",
+    "affectedComponent": "External load balancer",
+    "evidenceLines": [
+      "[PaperWorker/WARN]: Failed to send chunk data",
+      "`curl http://localhost:25565` -> connection refused"
+    ],
+    "safeFirstStep": "Drain traffic, capture `iptables -L`, and recreate the routing table before touching configs.",
+    "likelyCause": "Load balancer routing missing after a recent Docker network restart.",
+    "customerMessage": "The load balancer isn't reaching the container; I'm checking routes and will rebuild the service safely.",
+    "evidenceToCollect": [
+      "`docker network inspect pterodactyl`",
+      "`iptables-save`",
+      "Load balancer health probe logs"
+    ],
+    "escalate": true,
+    "resolutionNotes": "Reloaded Docker net and LB; restored connectivity without changing server settings."
+  },
+  {
+    "id": "inc-009",
+    "category": "infrastructure",
+    "label": "likely infrastructure issue",
+    "severity": "CRITICAL",
+    "priority": "P0",
+    "affectedComponent": "Host kernel",
+    "evidenceLines": [
+      "[Server thread/ERROR]: OOM killer invoked, killed process 14321 (java)",
+      "dmesg: Out of memory: Kill process 14321"
+    ],
+    "safeFirstStep": "Stop accepting workloads, take a snapshot, and send memory stats to platform team.",
+    "likelyCause": "Host is under memory pressure from another container, not the Minecraft service itself.",
+    "customerMessage": "The host ran out of memory and killed the JVM; I'm escalating to infrastructure to free RAM before we start again.",
+    "evidenceToCollect": [
+      "`free -m`",
+      "`top -b -n1`",
+      "Container resource limits from Docker"
+    ],
+    "escalate": true,
+    "resolutionNotes": "Infrastructure freed RAM and adjusted limits; node stabilized."
+  },
+  {
+    "id": "inc-010",
+    "category": "plugin",
+    "label": "plugin/config conflict",
+    "severity": "LOW",
+    "priority": "P3",
+    "affectedComponent": "Dynmap",
+    "evidenceLines": [
+      "Dynmap reported chunk coordinate 0,0 out of bounds",
+      "Paper chunk cache size 1/128"
+    ],
+    "safeFirstStep": "Stop the server, take a config snapshot, and clear Dynmap caches.",
+    "likelyCause": "Dynmap cache folder corrupted after a manual file signature update.",
+    "customerMessage": "Dynmap's cache is corrupted; I'll clear the cache and restart once the server is stopped.",
+    "evidenceToCollect": [
+      "`dynmap/logs/latest.log`",
+      "`dynmap/configuration.txt`",
+      "Chunk cache size setting"
+    ],
+    "escalate": false,
+    "resolutionNotes": "Deleted cache and let Dynmap rebuild after restart; map renders normally."
+  },
+  {
+    "id": "inc-011",
+    "category": "api",
+    "label": "version mismatch",
+    "severity": "HIGH",
+    "priority": "P1",
+    "affectedComponent": "Rest API gateway",
+    "evidenceLines": [
+      "[ApiWorker/ERROR]: Client expects schema v4, gateway serves v5",
+      "Schema validation failed: Unknown field 'livenessProbe'"
+    ],
+    "safeFirstStep": "Stop routing new requests, back up API configs, and document schema changes.",
+    "likelyCause": "Rolling deploy introduced breaking schema change without client coordination.",
+    "customerMessage": "The API contract changed unexpectedly; I'm rolling back to v4 while coordinating on an upgrade plan.",
+    "evidenceToCollect": [
+      "`api-spec.yaml`",
+      "`kubectl describe deployment api-gateway`",
+      "Client SDK version"
+    ],
+    "escalate": true,
+    "resolutionNotes": "Rolled gateway back to v4, notified product, and scheduled controlled migration."
+  },
+  {
+    "id": "inc-012",
+    "category": "monitoring",
+    "label": "likely infrastructure issue",
+    "severity": "MEDIUM",
+    "priority": "P2",
+    "affectedComponent": "Disk subsystem",
+    "evidenceLines": [
+      "iostat reports 99% util on /data",
+      "journalctl: nvme0n1: I/O 4294967295 blocks"
+    ],
+    "safeFirstStep": "Pause writes, snapshot the disk, and collect SMART health before making changes.",
+    "likelyCause": "Underlying storage is saturated or failing; not the Minecraft process itself.",
+    "customerMessage": "Host disk is saturated; I'm collecting evidence and engaging infrastructure to validate the array.",
+    "evidenceToCollect": [
+      "`smartctl -a /dev/nvme0n1`",
+      "`df -h /data`",
+      "Container-level I/O stats"
+    ],
+    "escalate": true,
+    "resolutionNotes": "Infra swapped to new volume; everything moved over without downtime."
+  },
+  {
+    "id": "inc-013",
+    "category": "startup",
+    "label": "startup error",
+    "severity": "LOW",
+    "priority": "P3",
+    "affectedComponent": "Init script",
+    "evidenceLines": [
+      "[Server thread/INFO]: Starting PaperMC v1.20",
+      "[Server thread/INFO]: Defaulting to offline mode"
+    ],
+    "safeFirstStep": "Ensure no active players, save server state, and capture start parameters.",
+    "likelyCause": "Start script launched in offline mode purposely; verifying that's expected.",
+    "customerMessage": "The server started in offline mode as configured; I'm double-checking the property to confirm it was intentional.",
+    "evidenceToCollect": [
+      "`server.properties` security settings",
+      "`startup.sh` arguments",
+      "`paper-1.20.log` snippets"
+    ],
+    "escalate": false,
+    "resolutionNotes": "Documented the offline mode requirement for the customer and flagged it in runbook."
+  },
+  {
+    "id": "inc-014",
+    "category": "ops",
+    "label": "needs escalation",
+    "severity": "HIGH",
+    "priority": "P1",
+    "affectedComponent": "Data center power",
+    "evidenceLines": [
+      "UPS reported transfer to generator",
+      "Multiple container logs show clean shutdown simultaneously"
+    ],
+    "safeFirstStep": "Confirm generator status, isolate power-sensitive work, and notify infrastructure lead.",
+    "likelyCause": "Power flicker triggered emergency shutdown; requires facility support.",
+    "customerMessage": "The data center lost power and the servers went offline; I'm elevating to facilities to restore stable power.",
+    "evidenceToCollect": [
+      "UPS logs",
+      "PDU status",
+      "Recent maintenance notices"
+    ],
+    "escalate": true,
+    "resolutionNotes": "Facility team replaced failing UPS; restarted containers once power stabilized."
+  },
+  {
+    "id": "inc-015",
+    "category": "backup",
+    "label": "needs escalation",
+    "severity": "MEDIUM",
+    "priority": "P2",
+    "affectedComponent": "Backup pipeline",
+    "evidenceLines": [
+      "[BackupJob/WARN]: Snapshot creation failed: HTTP 500",
+      "S3 reports `ServiceUnavailable`"
+    ],
+    "safeFirstStep": "Stop backup cron, preserve existing snapshots locally, and collect provider status.",
+    "likelyCause": "Remote storage provider (S3) is throttled; not an application bug.",
+    "customerMessage": "Backups failed because the storage API is unavailable right now; I'm escalating to platform to coordinate retries.",
+    "evidenceToCollect": [
+      "Backup job log",
+      "`aws sts get-caller-identity`",
+      "Recent S3 status page output"
+    ],
+    "escalate": true,
+    "resolutionNotes": "Provider resolved the outage; backups reran successfully later."
+  }
+]

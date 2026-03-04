@@ -1,0 +1,17 @@
+# Node modules
+node_modules/
+packages/**/node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist/
+packages/*/dist/
+frontend/dist/
+
+# Ops lab artifacts
+ops-lab/logs/
+ops-lab/backups/
+
+# IDE files
+.vscode/
+.DS_Store

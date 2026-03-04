@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IncidentRecord",
+  "type": "object",
+  "required": [
+    "id",
+    "category",
+    "label",
+    "severity",
+    "priority",
+    "affectedComponent",
+    "evidenceLines",
+    "safeFirstStep",
+    "likelyCause",
+    "customerMessage",
+    "evidenceToCollect",
+    "escalate",
+    "resolutionNotes"
+  ],
+  "properties": {
+    "id": {"type": "string", "description": "Unique identifier for tracking."},
+    "category": {"type": "string", "description": "Functional area (startup, config, plugin, infrastructure, etc.)."},
+    "label": {"type": "string", "description": "Public diagnosis label (one of the five classifier classes)."},
+    "severity": {"type": "string", "description": "Operational seriousness (CRITICAL, HIGH, MEDIUM, LOW)."},
+    "priority": {"type": "string", "description": "Response tier (P0–P3)."},
+    "affectedComponent": {"type": "string", "description": "Component directly impacted."},
+    "evidenceLines": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Log/message lines that triggered the classification."
+    },
+    "safeFirstStep": {"type": "string", "description": "Immediate safe action (stop, backup, inspect)."},
+    "likelyCause": {"type": "string"},
+    "customerMessage": {"type": "string", "description": "Calm explanation for the customer."},
+    "evidenceToCollect": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Additional logs/config to gather before escalation."
+    },
+    "escalate": {"type": "boolean", "description": "Should this incident be escalated?"},
+    "resolutionNotes": {"type": "string"}
+  }
+}

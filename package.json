@@ -1,0 +1,21 @@
+{
+  "name": "wingcraft",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "frontend"
+  ],
+  "scripts": {
+    "bootstrap": "npm install",
+    "build:all": "npm run build --workspaces",
+    "build": "npm run build:all",
+    "test": "npm run test:parser --workspace @wingcraft/parser",
+    "lint": "npm run lint --workspace frontend"
+  },
+  "devDependencies": {
+    "@types/node": "^20.13.0",
+    "typescript": "^5.4.5"
+  }
+}

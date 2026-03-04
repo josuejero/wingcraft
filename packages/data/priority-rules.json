@@ -1,0 +1,6 @@
+{
+  "CRITICAL": {"priority": "P0", "response": "Immediate on-call triage"},
+  "HIGH": {"priority": "P1", "response": "30-minute response window"},
+  "MEDIUM": {"priority": "P2", "response": "2-hour response"},
+  "LOW": {"priority": "P3", "response": "Next business day"}
+}
