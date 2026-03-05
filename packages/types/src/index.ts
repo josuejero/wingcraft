@@ -9,6 +9,17 @@ export type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
 export type Priority = 'P0' | 'P1' | 'P2' | 'P3'
 export type FieldSource = 'seeded' | 'heuristic'
 
+export type SignatureSummary = {
+  id: string
+  name: string
+  description: string
+  label: Label
+  severity: Severity
+  hints: string[]
+  matchedLines: string[]
+  confidenceScore: number
+}
+
 export type IncidentRecord = {
   id: string
   category: string
@@ -23,6 +34,8 @@ export type IncidentRecord = {
   evidenceToCollect: string[]
   escalate: boolean
   resolutionNotes: string
+  confidenceScore?: number
+  signature?: SignatureSummary
 }
 
 export interface TriageResult extends IncidentRecord {
@@ -35,4 +48,6 @@ export type ClassificationSummary = {
   severity: Severity
   priority: Priority
   matchedKeywords: string[]
+  confidenceScore: number
+  signature?: SignatureSummary
 }

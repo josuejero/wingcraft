@@ -8,6 +8,7 @@ A private operations lab plus public parser frontend for realistic PaperMC incid
 - `packages/parser-heuristics/` – keyword-driven templates and severity defaults published as `@wingcraft/parser-heuristics`, so heuristics stay consumable even outside the parser.
 - `packages/parser-classifier/` – classifier factory that accepts heuristics plus priority rules and exports `classifyIncident` via `@wingcraft/parser-classifier`.
 - `packages/parser-builder/` – triage builder that wires classifiers, heuristics, and seeded incidents into `TriageResult` objects via `@wingcraft/parser-builder`.
+- `packages/parser-core/` – deterministic pipeline orchestrator that normalizes logs, detects signatures, runs the classifier, and builds `TriageResult`s while exporting `runParserPipeline` plus stage interfaces so downstream code can replace individual steps.
 - `packages/parser/` – Thin orchestrator that wires `@wingcraft/parser-heuristics`, `@wingcraft/parser-classifier`, `@wingcraft/parser-builder`, and `@wingcraft/data` together to export `classifyIncident`, `buildTriageResult`, the validation script, and the canonical schema-derived types.
 - `frontend/` – React + TypeScript + Vite project that lets interviewers paste logs, view the structured incident record, and browse the seeded scenarios. Deploys to GitHub Pages via workflow under `.github/workflows`.
 - `ops-lab/` – Docker Compose lab with scripts for safe-first steps (stop, backup, tail logs, collect evidence) that mirror the documented workflow in `docs/lab-guidance.md`.
@@ -34,6 +35,10 @@ A private operations lab plus public parser frontend for realistic PaperMC incid
 The current parser/catalog now surfaces the 15 Phase 3 reproducible incidents documented in `docs/phase3-incidents.md`. Each entry points to its template under `ops-lab/configs/templates/<scenario>`, the emitted log signature, the safe-first action, and a scenario-specific reset script so you can rerun the evidence exactly.
 
 Ops Lab incident manifests under `ops-lab/incidents/*.yml` and the reset helpers in `ops-lab/scripts/reset-*.sh` keep the reproducible workflows in sync with the dataset consumed by `@wingcraft/data`.
+
+## Phase 4 parser pipeline
+
+Phase 4 replaces the seeded-only classifier with a deterministic, client-side parser that normalizes timestamps, runs a signature library modeled on the PaperMC troubleshooting docs, scores confidence, and then feeds the heuristics/templates from `@wingcraft/parser-heuristics` so every diagnosis includes a safe-first step, evidence to collect, and customer messaging. The pipeline (normalize → detect → extract → score → categorize → respond → escalate) is documented in `docs/phase4-parser.md` and drives both the frontend demo and `@wingcraft/parser`.
 
 ## Deploying the frontend
 The workflow at `.github/workflows/pages.yml` builds the Vite app and pushes `frontend/dist` to `gh-pages`. The site is a read-only recruiter demo; all sensitive work is done through the private ops lab.

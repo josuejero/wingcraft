@@ -10,9 +10,6 @@
   "include": ["src"],
   "references": [
     { "path": "../types" },
-    { "path": "../data" },
-    { "path": "../parser-heuristics" },
-    { "path": "../parser-utils" },
-    { "path": "../parser-signatures" }
+    { "path": "../parser-utils" }
   ]
 }

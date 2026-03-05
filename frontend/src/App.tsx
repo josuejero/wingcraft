@@ -11,6 +11,7 @@ const displayFields: Array<{ label: string; key: keyof IncidentRecord }> = [
   { label: 'Category', key: 'category' },
   { label: 'Severity', key: 'severity' },
   { label: 'Priority', key: 'priority' },
+  { label: 'Confidence', key: 'confidenceScore' },
   { label: 'Affected component', key: 'affectedComponent' },
   { label: 'Escalation?', key: 'escalate' }
 ]
@@ -20,7 +21,10 @@ const fieldSourceBadge = (source?: 'seeded' | 'heuristic'): JSX.Element | null =
   return <span className={`field-source ${source}`}>{source.toUpperCase()}</span>
 }
 
-const formatValue = (value: unknown): string => {
+const formatValue = (value: unknown, key?: keyof IncidentRecord): string => {
+  if (key === 'confidenceScore' && typeof value === 'number') {
+    return `${Math.round(value * 100)}%`
+  }
   if (Array.isArray(value)) {
     return value.join(' • ')
   }
@@ -58,10 +62,10 @@ function App() {
     <div className="app-shell">
       <header>
         <div>
-        <p className="eyebrow">Wingcraft Phase 3</p>
+        <p className="eyebrow">Wingcraft Phase 4</p>
           <h1>Incident triage simulator</h1>
         </div>
-        <p className="subtitle">Paste raw log text, inspect the classifier’s interpretation, and follow the Phase 3 incident catalog in `docs/phase3-incidents.md`.</p>
+        <p className="subtitle">Paste raw log text, inspect the deterministic parser pipeline, and see `docs/phase4-parser.md` for the Phase 4 flow.</p>
       </header>
 
       <section className="grid">
@@ -90,7 +94,7 @@ function App() {
                     <p>
                       <strong>{label}</strong>
                     </p>
-                    <p className="field-value">{formatValue(result[key])}</p>
+                    <p className="field-value">{formatValue(result[key], key)}</p>
                     {fieldSourceBadge(result.fieldSources?.[key])}
                   </div>
                 )
@@ -101,6 +105,40 @@ function App() {
           )}
         </div>
       </section>
+
+      {result && (
+        <section className="card">
+          <h2>Diagnosis pipeline</h2>
+          <div className="detail-grid">
+            <article>
+              <h3>Signature</h3>
+              <p>{result.signature?.name ?? 'Heuristic fallback'}</p>
+              {result.signature?.description && <p>{result.signature.description}</p>}
+              {result.signature?.hints && (
+                <ul>
+                  {result.signature.hints.map((hint: string) => (
+                    <li key={hint}>{hint}</li>
+                  ))}
+                </ul>
+              )}
+            </article>
+            <article>
+              <h3>Confidence</h3>
+              <p className="field-value">
+                {typeof result.confidenceScore === 'number'
+                  ? `${Math.round(result.confidenceScore * 100)}%`
+                  : 'n/a'}
+              </p>
+              <p className="muted">Derived from signatures plus keyword density.</p>
+            </article>
+            <article>
+              <h3>Escalation threshold</h3>
+              <p>{result.escalate ? 'Meets escalation policy' : 'Handled at frontline'}</p>
+              <p className="muted">Severity + the `escalate` flag determine the next queue.</p>
+            </article>
+          </div>
+        </section>
+      )}
 
       {result && (
         <section className="card">
@@ -166,7 +204,9 @@ function App() {
             </article>
           ))}
         </div>
-        <p className="footnote">All 15 Phase 3 incidents live in <code>packages/data/incidents.json</code>, are cataloged in <code>docs/phase3-incidents.md</code>, and are published via <code>@wingcraft/data</code>.</p>
+        <p className="footnote">
+          All 15 Phase 3 incidents live in <code>packages/data/incidents.json</code> and <code>docs/phase3-incidents.md</code>; the Phase 4 parser pipeline is outlined in <code>docs/phase4-parser.md</code>.
+        </p>
       </section>
     </div>
   )

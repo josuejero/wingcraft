@@ -10,32 +10,51 @@ import {
   matchSeededIncident
 } from '@wingcraft/parser-utils'
 
-export type ClassifierFunction = (logText: string) => ClassificationSummary
+export type BuilderInput = {
+  logText: string
+  classification: ClassificationSummary
+  normalizedLogText?: string
+}
+
+export type BuilderFn = (input: BuilderInput) => TriageResult
 
 export interface BuilderConfig {
-  classifier: ClassifierFunction
   heuristics: LabelHeuristics
   seededIncidents: IncidentRecord[]
 }
 
 export function createBuilder(config: BuilderConfig) {
-  const { classifier, heuristics, seededIncidents } = config
+  const { heuristics, seededIncidents } = config
 
   return {
-    buildTriageResult(logText: string): TriageResult {
-      const classification = classifier(logText)
+    buildTriageResult(input: BuilderInput): TriageResult {
+      const { logText, classification, normalizedLogText } = input
       const matchedIncident = matchSeededIncident({
         logText,
         label: classification.label,
-        seededIncidents
+        seededIncidents,
+        normalizedLogText
       })
 
       if (matchedIncident) {
-        return {
+        const seededEvidence = classification.signature?.matchedLines ?? matchedIncident.evidenceLines
+        const incidentWithExtras: IncidentRecord = {
           ...matchedIncident,
+          evidenceLines: seededEvidence,
+          confidenceScore: classification.confidenceScore,
+          ...(classification.signature ? { signature: classification.signature } : {})
+        }
+
+        const seededOverrides: Partial<IncidentRecord> = {
+          confidenceScore: classification.confidenceScore,
+          ...(classification.signature ? { signature: classification.signature } : {})
+        }
+
+        return {
+          ...incidentWithExtras,
           fieldSources: createFieldSourceMap(
-            matchedIncident,
-            {},
+            incidentWithExtras,
+            seededOverrides,
             classification.matchedKeywords
           ),
           matchedIncidentId: matchedIncident.id
@@ -44,7 +63,8 @@ export function createBuilder(config: BuilderConfig) {
 
       const template = heuristics[classification.label] ?? heuristics['needs escalation']
       const defaultId = `auto-${Date.now()}`
-      const evidenceLines = createHeuristicEvidenceLines(classification.matchedKeywords)
+      const evidenceLines =
+        classification.signature?.matchedLines ?? createHeuristicEvidenceLines(classification.matchedKeywords)
 
       const resultBase: IncidentRecord = {
         id: defaultId,
@@ -59,7 +79,9 @@ export function createBuilder(config: BuilderConfig) {
         customerMessage: template.customerMessage,
         evidenceToCollect: template.evidenceToCollect,
         escalate: template.escalate,
-        resolutionNotes: template.resolutionNotes
+        resolutionNotes: template.resolutionNotes,
+        confidenceScore: classification.confidenceScore,
+        ...(classification.signature ? { signature: classification.signature } : {})
       }
 
       const heuristicsSources = createFieldSourceMap(

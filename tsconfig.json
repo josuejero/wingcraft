@@ -6,6 +6,7 @@
     { "path": "./packages/data" },
     { "path": "./packages/parser-heuristics" },
     { "path": "./packages/parser-utils" },
+    { "path": "./packages/parser-signatures" },
     { "path": "./packages/parser-classifier" },
     { "path": "./packages/parser-builder" },
     { "path": "./packages/parser-core" },

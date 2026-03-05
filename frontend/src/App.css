@@ -192,6 +192,11 @@ button:hover {
   font-size: 0.9rem;
 }
 
+.muted {
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 640px) {
   .field-grid {
     grid-template-columns: 1fr;
