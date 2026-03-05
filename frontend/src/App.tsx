@@ -6,7 +6,62 @@ import type { IncidentRecord, TriageResult } from '@wingcraft/types'
 
 const defaultInput = seededIncidentRecords[0]?.evidenceLines.join('\n') ?? ''
 const sampleCount = 6
-const checklistItems = ['Restart core services', 'Review console output', 'Inspect files & configs', 'Verify backups', 'Update documentation']
+type ChecklistStep = {
+  id: string
+  title: string
+  detail: string
+  note?: string
+}
+
+const checklistSteps: ChecklistStep[] = [
+  {
+    id: 'confirm-impact',
+    title: 'Confirm service impact',
+    detail: 'Validate which services or customers are affected before touching anything.',
+  },
+  {
+    id: 'avoid-risky-changes',
+    title: 'Stop or avoid risky changes while live',
+    detail: 'Keep the service read-only and pause deployments; PaperMC says stop and back up first.',
+    note: 'This mirrors PaperMC’s “stop and back up first” guidance so you pause before touching production.',
+  },
+  {
+    id: 'confirm-backups',
+    title: 'Confirm backup status',
+    detail: 'Ensure recent backups exist (dumps, snapshots, saves) before editing data or restarting.',
+  },
+  {
+    id: 'inspect-logs',
+    title: 'Inspect console & latest.log',
+    detail: 'Review console output and latest.log for timestamps, stack traces, and replication issues.',
+  },
+  {
+    id: 'inspect-config',
+    title: 'Inspect config or plugin state',
+    detail: 'Double-check configs, plugins, mods, or environment tweaks for mismatched settings.',
+  },
+  {
+    id: 'apply-fix',
+    title: 'Apply minimal fix',
+    detail: 'Choose the smallest change (tweak, rollback, disable) that may resolve the root cause.',
+  },
+  {
+    id: 'restart-and-verify',
+    title: 'Restart and verify',
+    detail: 'Restart affected services and confirm status dashboards, console, and health checks.',
+  },
+  {
+    id: 'document-actions',
+    title: 'Document actions taken',
+    detail: 'Log who did what, when, and why so the runbook and customer updates stay accurate.',
+  },
+  {
+    id: 'escalate-or-resolve',
+    title: 'Decide whether to escalate',
+    detail: 'Weigh priority/impact against SLAs to escalate or close, following log → categorize → prioritize → respond → communicate → escalate.',
+    note: 'The broader incident-management pattern keeps the lifecycle flowing from logging and triage to communication and escalation.',
+  },
+]
 
 const formatConfidenceLabel = (value?: number) => {
   if (typeof value !== 'number') return 'n/a'
@@ -99,7 +154,7 @@ function App() {
       await navigator.clipboard.writeText(reply)
       setCopyStatus('Reply copied')
       setTimeout(() => setCopyStatus(''), 2500)
-    } catch (err) {
+    } catch {
       setCopyStatus('Clipboard unavailable')
     }
   }
@@ -281,15 +336,28 @@ function App() {
 
       <section className="panel checklist-panel">
         <div className="panel-header">
-          <p className="eyebrow">Checklist</p>
-          <span className="panel-hint">Front-line validations</span>
+          <div>
+            <p className="eyebrow">Checklist</p>
+            <p className="panel-subtitle">
+              PaperMC’s “stop and back up first” advice joined by the incident-management flow (log → categorize →
+              prioritize → respond → communicate → escalate).
+            </p>
+          </div>
+          <span className="panel-hint">Pterodactyl-style operator workflow</span>
         </div>
         <div className="checklist-grid">
-          {checklistItems.map((item) => (
-            <label key={item} className="checklist-item">
-              <span className="checkbox" aria-hidden />
-              <span>{item}</span>
-            </label>
+          {checklistSteps.map((step, index) => (
+            <article key={step.id} className="checklist-step">
+              <div className="checklist-step-heading">
+                <span className="checkbox" aria-hidden />
+                <div>
+                  <p className="step-number">{String(index + 1).padStart(2, '0')}</p>
+                  <p className="step-title">{step.title}</p>
+                </div>
+              </div>
+              <p className="step-detail">{step.detail}</p>
+              {step.note && <p className="step-note">{step.note}</p>}
+            </article>
           ))}
         </div>
       </section>
