@@ -1,211 +1,312 @@
 import './App.css'
-import type { JSX } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import type { ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildTriageResult, seededIncidentRecords } from '@wingcraft/parser'
 import type { IncidentRecord, TriageResult } from '@wingcraft/types'
 
-const defaultInput = seededIncidentRecords[0]?.evidenceLines.join(' ') ?? ''
+const defaultInput = seededIncidentRecords[0]?.evidenceLines.join('\n') ?? ''
+const sampleCount = 6
+const checklistItems = ['Restart core services', 'Review console output', 'Inspect files & configs', 'Verify backups', 'Update documentation']
 
-const displayFields: Array<{ label: string; key: keyof IncidentRecord }> = [
-  { label: 'Label', key: 'label' },
-  { label: 'Category', key: 'category' },
-  { label: 'Severity', key: 'severity' },
-  { label: 'Priority', key: 'priority' },
-  { label: 'Confidence', key: 'confidenceScore' },
-  { label: 'Affected component', key: 'affectedComponent' },
-  { label: 'Escalation?', key: 'escalate' }
-]
-
-const fieldSourceBadge = (source?: 'seeded' | 'heuristic'): JSX.Element | null => {
-  if (!source) return null
-  return <span className={`field-source ${source}`}>{source.toUpperCase()}</span>
+const formatConfidenceLabel = (value?: number) => {
+  if (typeof value !== 'number') return 'n/a'
+  return `${Math.round(Math.min(Math.max(value, 0), 1) * 100)}%`
 }
 
-const formatValue = (value: unknown, key?: keyof IncidentRecord): string => {
-  if (key === 'confidenceScore' && typeof value === 'number') {
-    return `${Math.round(value * 100)}%`
-  }
-  if (Array.isArray(value)) {
-    return value.join(' • ')
-  }
-  if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No'
-  }
-  return String(value ?? '-')
+const clampConfidence = (value?: number) => {
+  if (typeof value !== 'number') return 0
+  return Math.round(Math.min(Math.max(value, 0), 1) * 100)
+}
+
+const buildCustomerReply = (result: TriageResult) => {
+  const impact = result.category ?? 'the service'
+  const knownImpact = result.customerMessage ? result.customerMessage : `We're investigating ${impact} affecting ${result.affectedComponent || 'the platform'}.`
+  const cause = result.likelyCause ? `Likely cause: ${result.likelyCause}.` : ''
+  const firstStep = result.safeFirstStep ? `First step: ${result.safeFirstStep}.` : ''
+  return `Thanks for flagging this incident. ${knownImpact} ${cause} ${firstStep} We'll follow up as soon as we have an update.`.trim()
+}
+
+const extractResolutionSteps = (notes?: string) => {
+  if (!notes) return []
+  return notes
+    .split(/\r?\n/)
+    .map((item) => item.split(/(?<=\.)\s+/))
+    .flat()
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 function App() {
   const [logInput, setLogInput] = useState(defaultInput)
   const [result, setResult] = useState<TriageResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(seededIncidentRecords[0]?.id ?? null)
+  const [copyStatus, setCopyStatus] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const parse = () => {
+  const parseGivenInput = useCallback((text: string) => {
     try {
-      const triage = buildTriageResult(logInput)
+      const triage = buildTriageResult(text)
       setResult(triage)
       setError(null)
     } catch (err) {
       setError((err as Error).message)
     }
-  }
+  }, [])
 
   useEffect(() => {
     if (defaultInput) {
-      parse()
+      parseGivenInput(defaultInput)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const evidenceList = useMemo(() => result?.evidenceLines ?? [], [result])
+  const resolutionSteps = useMemo(() => extractResolutionSteps(result?.resolutionNotes), [result])
+  const sampleIncidents = seededIncidentRecords.slice(0, sampleCount)
+
+  const handleIncidentSelect = (incident: IncidentRecord) => {
+    const text = incident.evidenceLines.join('\n')
+    setLogInput(text)
+    setSelectedIncidentId(incident.id)
+    parseGivenInput(text)
+  }
+
+  const handleFileUpload = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const content = reader.result as string
+      setLogInput(content)
+      parseGivenInput(content)
+    }
+    reader.onerror = () => {
+      setError('Unable to read the selected file.')
+    }
+    reader.readAsText(file)
+    event.target.value = ''
+  }
+
+  const handleCopyReply = async () => {
+    if (!result) return
+    const reply = buildCustomerReply(result)
+    try {
+      await navigator.clipboard.writeText(reply)
+      setCopyStatus('Reply copied')
+      setTimeout(() => setCopyStatus(''), 2500)
+    } catch (err) {
+      setCopyStatus('Clipboard unavailable')
+    }
+  }
+
+  const customerReply = result ? buildCustomerReply(result) : 'Parse a log to draft the customer reply.'
 
   return (
-    <div className="app-shell">
-      <header>
-        <div>
-        <p className="eyebrow">Wingcraft Phase 4</p>
-          <h1>Incident triage simulator</h1>
-        </div>
-        <p className="subtitle">Paste raw log text, inspect the deterministic parser pipeline, and see `docs/phase4-parser.md` for the Phase 4 flow.</p>
+    <div className="console-shell">
+      <header className="hero">
+        <p className="eyebrow">Home</p>
+        <h1>Wingcraft Support Console</h1>
+        <p className="hero-copy">
+          Wingcraft ingests raw server logs, surfaces deterministic triage, and guides a recruiter through a calm,
+          support-style investigation.
+        </p>
       </header>
 
-      <section className="grid">
-        <div className="card">
-          <h2>Log ingest</h2>
-          <p>Client-side parser accepts raw PaperMC logs or stack traces.</p>
-          <textarea
-            value={logInput}
-            onChange={(event) => setLogInput(event.target.value)}
-            placeholder="Paste server logs here"
-          />
-          <div className="actions">
-            <button onClick={parse}>Parse logs</button>
-            {error && <span className="error">{error}</span>}
+      <section className="panel sample-incidents">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Sample Incidents</p>
+            <p className="panel-subtitle">Click a preset case to load its log evidence.</p>
           </div>
+          <span className="panel-hint">Recruiter-friendly scenarios</span>
         </div>
-
-        <div className="card">
-          <h2>Structured triage</h2>
-          {result ? (
-            <div className="field-grid">
-              {displayFields.map(({ label, key }) => {
-                const mapKey = `${label}-${key}`
-                return (
-                  <div key={mapKey} className="field-row">
-                    <p>
-                      <strong>{label}</strong>
-                    </p>
-                    <p className="field-value">{formatValue(result[key], key)}</p>
-                    {fieldSourceBadge(result.fieldSources?.[key])}
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <p>Parse an excerpt to see structured answers.</p>
-          )}
+        <div className="incident-grid">
+          {sampleIncidents.map((incident) => (
+            <button
+              type="button"
+              key={incident.id}
+              className={`incident-card ${incident.id === selectedIncidentId ? 'active' : ''}`}
+              onClick={() => handleIncidentSelect(incident)}
+            >
+              <div className="incident-card-header">
+                <span className="incident-id">{incident.id}</span>
+                <span className={`incident-badge ${incident.category.replace(/\s+/g, '-')}`}>{incident.category}</span>
+              </div>
+              <p className="incident-label">{incident.label}</p>
+              <p className="incident-meta">Severity: {incident.severity} · Priority: {incident.priority}</p>
+            </button>
+          ))}
         </div>
       </section>
 
-      {result && (
-        <section className="card">
-          <h2>Diagnosis pipeline</h2>
-          <div className="detail-grid">
-            <article>
-              <h3>Signature</h3>
-              <p>{result.signature?.name ?? 'Heuristic fallback'}</p>
-              {result.signature?.description && <p>{result.signature.description}</p>}
-              {result.signature?.hints && (
-                <ul>
-                  {result.signature.hints.map((hint: string) => (
-                    <li key={hint}>{hint}</li>
-                  ))}
-                </ul>
-              )}
-            </article>
-            <article>
-              <h3>Confidence</h3>
-              <p className="field-value">
-                {typeof result.confidenceScore === 'number'
-                  ? `${Math.round(result.confidenceScore * 100)}%`
-                  : 'n/a'}
-              </p>
-              <p className="muted">Derived from signatures plus keyword density.</p>
-            </article>
-            <article>
-              <h3>Escalation threshold</h3>
-              <p>{result.escalate ? 'Meets escalation policy' : 'Handled at frontline'}</p>
-              <p className="muted">Severity + the `escalate` flag determine the next queue.</p>
-            </article>
+      <section className="panel upload-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Upload Log</p>
+            <p className="panel-subtitle">Paste raw text or load a .log/.txt file.</p>
           </div>
-        </section>
-      )}
+          <div className="upload-actions">
+            <button type="button" className="ghost" onClick={handleFileUpload}>
+              Choose log file
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".log,.txt,text/plain"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+          </div>
+        </div>
+        <textarea
+          value={logInput}
+          onChange={(event) => setLogInput(event.target.value)}
+          placeholder="Paste latest.log, stack trace, or console output."
+        />
+        <div className="actions">
+          <button onClick={() => parseGivenInput(logInput)}>Parse logs</button>
+          {error && <span className="error">{error}</span>}
+        </div>
+        <p className="upload-hint">The parser runs entirely in-browser; no data leaves your session.</p>
+      </section>
 
-      {result && (
-        <section className="card">
-          <h2>Detailed guidance</h2>
-          <div className="detail-grid">
-            <article>
-              <h3>Safe first step</h3>
-              <p>{result.safeFirstStep}</p>
-            </article>
-            <article>
-              <h3>Likely cause</h3>
-              <p>{result.likelyCause}</p>
-            </article>
-            <article>
-              <h3>Customer message</h3>
-              <p>{result.customerMessage}</p>
-            </article>
-            <article>
-              <h3>Evidence to collect</h3>
+      <section className="panel diagnosis-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Diagnosis</p>
+            <p className="panel-subtitle">Category, confidence, cause, and supporting evidence.</p>
+          </div>
+          <span className="panel-hint">Confidence is deterministic.</span>
+        </div>
+        <div className="diagnosis-grid">
+          <article>
+            <h3>Category</h3>
+            <p className="field-value">{result?.category ?? '–'}</p>
+            <p className="muted">Affected component: {result?.affectedComponent ?? 'unknown'}</p>
+          </article>
+          <article>
+            <h3>Confidence</h3>
+            <p className="field-value">{formatConfidenceLabel(result?.confidenceScore)}</p>
+            <div className="confidence-track">
+              <div className="confidence-fill" style={{ width: `${clampConfidence(result?.confidenceScore)}%` }} />
+            </div>
+            <p className="muted">Signature hints + heuristics yield this percentage.</p>
+          </article>
+          <article>
+            <h3>Likely cause</h3>
+            <p>{result?.likelyCause ?? 'Awaiting parser output.'}</p>
+          </article>
+          <article className="evidence-section">
+            <h3>Evidence lines</h3>
+            {evidenceList.length ? (
               <ul>
-                {result.evidenceToCollect.map((item: string) => (
-                  <li key={item}>{item}</li>
+                {evidenceList.map((line) => (
+                  <li key={line}>{line}</li>
                 ))}
               </ul>
-            </article>
-            <article>
-              <h3>Resolution notes</h3>
-              <p>{result.resolutionNotes}</p>
-            </article>
-          </div>
-        </section>
-      )}
+            ) : (
+              <p className="muted">Parse logs to populate the evidence.</p>
+            )}
+          </article>
+        </div>
+      </section>
 
-      {result && (
-        <section className="card">
-          <div className="field-row">
-            <div>
-              <h3>Evidence lines</h3>
-              <p>{result.matchedIncidentId ? 'Matched seeded incident' : 'Heuristic evidence'}</p>
-            </div>
+      <section className="panel action-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Action Panel</p>
+            <p className="panel-subtitle">Safe steps, next actions, and escalation posture.</p>
           </div>
-          <ul className="evidence-list">
-            {evidenceList.map((line: string) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+          <span className="panel-hint">Aligned with Phase 4 guidance.</span>
+        </div>
+        <div className="action-grid">
+          <article>
+            <h3>Safe first step</h3>
+            <p>{result?.safeFirstStep ?? 'Parse an incident to see safe guidance.'}</p>
+          </article>
+          <article>
+            <h3>Next steps</h3>
+            {resolutionSteps.length ? (
+              <ul>
+                {resolutionSteps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">Resolution notes fill this once the parser has context.</p>
+            )}
+          </article>
+          <article>
+            <h3>Evidence to collect</h3>
+            <ul>
+              {(result?.evidenceToCollect ?? []).length ? (
+                result!.evidenceToCollect.map((item) => <li key={item}>{item}</li>)
+              ) : (
+                <li className="muted">No evidence listed yet.</li>
+              )}
+            </ul>
+          </article>
+          <article className={`escalation-pill ${result?.escalate ? 'escalate' : 'resolved'}`}>
+            <h3>Escalation</h3>
+            <p>{result?.escalate ? 'Elevate to on-call' : 'Handle at frontline'}</p>
+            <p className="muted">Priority: {result?.priority ?? '–'}</p>
+          </article>
+        </div>
+      </section>
 
-      <section className="card">
-        <h2>Seeded incident catalogue</h2>
-        <div className="catalogue">
-          {seededIncidentRecords.slice(0, 6).map((incident: IncidentRecord) => (
-            <article key={incident.id}>
-              <p className="incident-id">{incident.id}</p>
-              <p className="incident-label">{incident.label}</p>
-              <p className="incident-meta">
-                <span>{incident.category}</span>
-                <span>{incident.severity}</span>
-                <span>{incident.priority}</span>
-              </p>
-              <p>{incident.safeFirstStep}</p>
-            </article>
+      <section className="panel customer-panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Customer Reply</p>
+            <p className="panel-subtitle">Best-practice acknowledgement, impact, and next step.</p>
+          </div>
+          <div className="reply-actions">
+            <button type="button" onClick={handleCopyReply} disabled={!result}>
+              Copy reply
+            </button>
+            {copyStatus && <span className="copy-status">{copyStatus}</span>}
+          </div>
+        </div>
+        <pre className="reply-block">{customerReply}</pre>
+        <p className="muted">
+          Atlassian &amp; PagerDuty templates emphasize early acknowledgement, current impact, and a clear next
+          update.
+        </p>
+      </section>
+
+      <section className="panel checklist-panel">
+        <div className="panel-header">
+          <p className="eyebrow">Checklist</p>
+          <span className="panel-hint">Front-line validations</span>
+        </div>
+        <div className="checklist-grid">
+          {checklistItems.map((item) => (
+            <label key={item} className="checklist-item">
+              <span className="checkbox" aria-hidden />
+              <span>{item}</span>
+            </label>
           ))}
         </div>
-        <p className="footnote">
-          All 15 Phase 3 incidents live in <code>packages/data/incidents.json</code> and <code>docs/phase3-incidents.md</code>; the Phase 4 parser pipeline is outlined in <code>docs/phase4-parser.md</code>.
+      </section>
+
+      <section className="panel about-panel">
+        <div className="panel-header">
+          <p className="eyebrow">About the Lab</p>
+          <span className="panel-hint">docs/phase4-parser.md</span>
+        </div>
+        <p>
+          The Phase 4 parser runs a client-side pipeline (normalize lines, detect signatures, classify, build the
+          triage) so every recruiter demo stays deterministic and reproducible. The frontend mirrors the documented
+          architecture while still delivering a local-in-browser experience that feels like a support console.
+        </p>
+        <p>
+          Ship this interface locally with `npm run dev` to demo the lab; everything runs inside the browser so you can
+          explain the same parser stages you read about in the Phase 4 doc right on-screen.
         </p>
       </section>
     </div>
