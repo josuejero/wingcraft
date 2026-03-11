@@ -10,15 +10,11 @@ import type {
 
 import {
   defaultDetectSignature,
-  defaultNormalize,
-  SignatureDetectorFn,
-  NormalizerFn
+  defaultNormalize
 } from './stages/index.js'
-import {
-  ParserPipelineOutput,
-  ParserPipelineStages,
-  runParserPipeline
-} from './pipeline.js'
+import type { SignatureDetectorFn, NormalizerFn } from './stages/index.js'
+import { runParserPipeline } from './pipeline.js'
+import type { ParserPipelineOutput, ParserPipelineStages } from './pipeline.js'
 
 export interface ParserConfig {
   heuristics?: LabelHeuristics

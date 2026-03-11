@@ -10,7 +10,11 @@ export default defineConfig({
     alias: {
       '@wingcraft/parser': path.resolve(__dirname, '..', 'packages', 'parser', 'src'),
       '@wingcraft/types': path.resolve(__dirname, '..', 'packages', 'types', 'src'),
-      '@wingcraft/data': path.resolve(__dirname, '..', 'packages', 'data', 'src')
+      '@wingcraft/data': path.resolve(__dirname, '..', 'packages', 'data', 'src'),
+      '@wingcraft/parser-heuristics': path.resolve(__dirname, '..', 'packages', 'parser-heuristics', 'src'),
+      '@wingcraft/parser-classifier': path.resolve(__dirname, '..', 'packages', 'parser-classifier', 'src'),
+      '@wingcraft/parser-builder': path.resolve(__dirname, '..', 'packages', 'parser-builder', 'src'),
+      '@wingcraft/parser-core': path.resolve(__dirname, '..', 'packages', 'parser-core', 'src')
     }
   },
   server: {

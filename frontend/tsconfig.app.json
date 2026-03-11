@@ -13,7 +13,11 @@
     "paths": {
       "@wingcraft/parser": ["../packages/parser/src"],
       "@wingcraft/types": ["../packages/types/src"],
-      "@wingcraft/data": ["../packages/data/src"]
+      "@wingcraft/data": ["../packages/data/src"],
+      "@wingcraft/parser-heuristics": ["../packages/parser-heuristics/src"],
+      "@wingcraft/parser-classifier": ["../packages/parser-classifier/src"],
+      "@wingcraft/parser-builder": ["../packages/parser-builder/src"],
+      "@wingcraft/parser-core": ["../packages/parser-core/src"]
     },
 
     "moduleResolution": "bundler",
