@@ -1,44 +1,87 @@
 # Wingcraft Triage Lab
 
-A private operations lab plus public parser frontend for realistic PaperMC incidents. The repo follows the Phase 1 plan: define the incident schema, seed 15 scenarios, build the parser/validator, spin up a Paper ops lab, and expose the results via a React + Vite GitHub Pages site.
+Wingcraft Triage Lab is a private operations training environment plus a public-facing parser/triage console built around reproduced PaperMC incidents. The workspace guides recruiters through evidence ingestion, deterministic parsing, safe-first actions, and customer messaging that mirror real incidents seeded in the Ops Lab.
 
-## Structure
-- `packages/types/` – canonical type definitions exported as `@wingcraft/types` for every consuming surface.
-- `packages/data/` – JSON schema, severity/priority rules, and the 15 seeded incidents published via `@wingcraft/data` so every package uses the same dataset.
-- `packages/parser-heuristics/` – keyword-driven templates and severity defaults published as `@wingcraft/parser-heuristics`, so heuristics stay consumable even outside the parser.
-- `packages/parser-classifier/` – classifier factory that accepts heuristics plus priority rules and exports `classifyIncident` via `@wingcraft/parser-classifier`.
-- `packages/parser-builder/` – triage builder that wires classifiers, heuristics, and seeded incidents into `TriageResult` objects via `@wingcraft/parser-builder`.
-- `packages/parser-core/` – deterministic pipeline orchestrator that normalizes logs, detects signatures, runs the classifier, and builds `TriageResult`s while exporting `runParserPipeline` plus stage interfaces so downstream code can replace individual steps.
-- `packages/parser/` – Thin orchestrator that wires `@wingcraft/parser-heuristics`, `@wingcraft/parser-classifier`, `@wingcraft/parser-builder`, and `@wingcraft/data` together to export `classifyIncident`, `buildTriageResult`, the validation script, and the canonical schema-derived types.
-- `frontend/` – React + TypeScript + Vite project that lets interviewers paste logs, view the structured incident record, and browse the seeded scenarios. Deploys to GitHub Pages via workflow under `.github/workflows`.
-- `ops-lab/` – Docker Compose lab with scripts for safe-first steps (stop, backup, tail logs, collect evidence) that mirror the documented workflow in `docs/lab-guidance.md`.
-- `docs/` – lab guidance and a narrated walkthrough connecting log ingestion, classification, safe-first steps, and customer messaging.
+## Repository layout
+- `package.json` / workspace scripts – bootstrap, build/test/lint orchestration, and shared devDependencies.
+- `packages/` – monorepo packages that build the parser pipeline, seeded data, and shared types. See the module list under **Parser architecture** below for how they connect.
+- `frontend/` – React + Vite demo that plugs straight into `@wingcraft/parser`, shows sample incidents, and exports `frontend/dist` for GitHub Pages deployment.
+- `ops-lab/` – Docker Compose lab, reusable configs, scenario manifests, and scripts for safe-first steps, fault injection, and reset helpers.
+- `docs/` – written guidance, catalogs, and walkthroughs grounding every workflow in the new recruit training narrative.
+- `.github/workflows/pages.yml` – builds `frontend/dist` and pushes it to `gh-pages`.
 
-## MVP vs Stretch
-| Scope | Status in Phase 1 |
-| --- | --- |
-| Seeded incidents + schema | ✅ Defined in `packages/data/` and exported through `@wingcraft/data`, covering the schema, priority rules, and all 15 seeded scenarios. |
-| Client-side parser | ✅ `@wingcraft/parser/buildTriageResult` runs locally and is reused by both Node validation and the frontend. |
-| GitHub Pages frontend | ✅ Vite app renders logs, shows structured fields, and can be deployed via the workflow. |
-| Recorded walkthrough | ✅ `docs/walkthrough.md` narrates a full incident. |
-| Local ops lab | ✅ `ops-lab/` includes Docker Compose and safe-first scripts for Linux/Docker testing. |
-| Stretch items (confidence scoring, search, downloadable reports, GitHub Actions parser fixtures) | ⏳ Reserved for later phases. |
+## Parser architecture
+The parser is hand-crafted TypeScript with modular packages that can be swapped or reused independently:
+
+- `@wingcraft/types` defines the incident schema (`IncidentRecord`, `TriageResult`, confidence/field-source tracking) used everywhere.
+- `@wingcraft/data` publishes the canonical JSON schema, the 15 seeded incidents, and the severity-to-priority rules that feed the classifier.
+- `@wingcraft/parser-heuristics` keeps safe-first steps, likely causes, escalation guidance, and messaging templates keyed by label.
+- `@wingcraft/parser-signatures` hosts matchers that detect PaperMC startup/plugin/port/memory fingerprints and returns signatures with confidence scores and hints.
+- `@wingcraft/parser-classifier` pairs the signature output with heuristics and priority rules to emit a `ClassificationSummary`.
+- `@wingcraft/parser-builder` merges seeded incidents (when evidence matches) or heuristics templates into deterministic `TriageResult` objects while tracking which fields came from heuristics versus seeded metadata.
+- `@wingcraft/parser-utils` contains the normalization, seeded-match helpers, and evidence-source tooling.
+- `@wingcraft/parser-core` orchestrates the normalization → signature detection → classification → builder pipeline, exposes `ParserPipelineStages`, and lets you override any stage via `ParserConfig`.
+- `@wingcraft/parser` re-exports all of the above plus the CLI-style `validate.ts` runner that walks `seededIncidentRecords` and ensures their label/priority/escalation flags stay aligned with the parser output.
+
+The Phase 4 pipeline is documented in `docs/phase4-parser.md`, so readers can trace how normalized text feeds signatures, how evidence lines are captured, and how the classifier/builder decide on safe-first steps, priority/escallation, and customer messaging.
+
+## Data & seeded incidents
+- `packages/data/incident-schema.json` enforces every field produced by the parser and UI.
+- `packages/data/incidents.json` contains the 15 reproducible incidents (the same ones referenced by the frontend, the ops lab, and the validation script).
+- `packages/data/priority-rules.json` maps severities to response priorities/responses eaten by the classifier.
+- `docs/phase3-incidents.md` catalogs each scenario, its template, its fault-injector signature, the safe-first action, and the reset helper that keeps the dataset in sync with the lab.
+
+## Ops Lab & reproducible scenarios
+- `ops-lab/docker-compose.yml` defines the PaperMC `paper` service, persistent volumes (`paper_configs`, `paper_world`, `paper_logs`), and the optional `fault-injector` profile.
+- Every scenario (baseline plus 15 faults) lives behind its own `.env` in `ops-lab/env/` and a config template under `ops-lab/configs/templates/`.
+- `ops-lab/incidents/*.yml` describes which env/template pair to seed and which fault-injector script the scenario uses, so the driven workflow always matches the seeded dataset.
+- Safe-first guidance is spelled out in `docs/lab-guidance.md` and supported by scripts such as `ops-lab/scripts/stop-server.sh`, `backup.sh`, `collect-evidence.sh`, `tail-logs.sh`, and `export-logs.sh`.
+- Fault injection scripts under `ops-lab/scripts/fault-injector/` write curated log signatures into `wingcraft_paper_logs`; run them through `ops-lab/scripts/fault-injector/run.sh <script>` when you want to replay a log outside of scenario resets.
+- Reset helpers (`ops-lab/scripts/reset-*.sh`) plus `ops-lab/scripts/archive-reset.sh` tidy the volumes, reseed the templates, and rerun `ops-lab/scripts/prepare-scenario.sh <scenario>` so you can re-enact each incident end-to-end.
+
+## Frontend console & demo
+- The React + Vite UI under `frontend/src/` plugs into `@wingcraft/parser`. `buildTriageResult` and `seededIncidentRecords` fill the log textarea, action panels, safe-first checklist, customer reply, and escalation badge defined in `frontend/src/App.tsx`.
+- Recruiters can click sample incidents, paste logs, or load a `.log/.txt` file, run the parser in-browser, read evidence and confidence scores, copy a customer reply, and follow the checklist that mirrors the ops-lab safe-first workflow.
+- Everything runs client-side so `frontend/dist` can be built (`npm run build --workspace frontend`) and deployed via `.github/workflows/pages.yml` without exposing backend services.
 
 ## Getting started
-1. **Install dependencies** – run `npm run bootstrap` from the repo root to install workspace dependencies and hoist shared tooling.
-2. **Ops Lab** – `./ops-lab/scripts/prepare-scenario.sh baseline` to seed `configs/templates/baseline`, then `cd ops-lab && docker compose --env-file env/common.env --env-file env/baseline.env up`. The `scripts/` helpers now include `stop-server.sh`, `backup.sh`, `collect-evidence.sh`, `export-logs.sh`, `archive-reset.sh`, and the `fault-injector` set described in `ops-lab/incidents/*.yml`.
-3. **Parser validation** – `npm run test` (alias for `@wingcraft/parser`’s validation) to ensure seeded samples produce the expected label, priority, and escalation decisions.
-4. **Frontend** – `cd frontend && npm run dev` to launch the static UI; `npm run build --workspace frontend` prepares `frontend/dist` for GitHub Pages, and `npm run build:all` compiles every workspace end-to-end.
 
-## Phase 3 reproducible incidents
+### Prerequisites
+- Node.js 20.x (per `.github/workflows/pages.yml`).
+- Docker & Docker Compose for the ops lab.
 
-The current parser/catalog now surfaces the 15 Phase 3 reproducible incidents documented in `docs/phase3-incidents.md`. Each entry points to its template under `ops-lab/configs/templates/<scenario>`, the emitted log signature, the safe-first action, and a scenario-specific reset script so you can rerun the evidence exactly.
+### Workspace bootstrap
+1. Run `npm run bootstrap` to install all workspace dependencies (hoisted via the root `package.json`).
+2. Build the TypeScript packages with `npm run build:all` or `npm run build`.
+3. Run `npm run test` to execute `@wingcraft/parser/src/validate.ts`, which ensures the parser still agrees with every seeded incident’s label, priority, and escalation flag.
 
-Ops Lab incident manifests under `ops-lab/incidents/*.yml` and the reset helpers in `ops-lab/scripts/reset-*.sh` keep the reproducible workflows in sync with the dataset consumed by `@wingcraft/data`.
+### Parser validation & tooling
+- `npm run test` (aliases to `@wingcraft/parser:test:parser`) runs the validation script over `seededIncidentRecords`.
+- `npm run lint` currently targets the frontend ESLint config; keep the React/TypeScript linting rules aligned with `frontend/eslint.config.js`.
 
-## Phase 4 parser pipeline
+### Frontend development
+1. `cd frontend`
+2. `npm install` (if not already bootstrapped) and `npm run dev` to launch the Vite dev server.
+3. Use `npm run build` to produce `frontend/dist`, and optionally `npm run preview` to serve the build locally before a GH Pages release.
 
-Phase 4 replaces the seeded-only classifier with a deterministic, client-side parser that normalizes timestamps, runs a signature library modeled on the PaperMC troubleshooting docs, scores confidence, and then feeds the heuristics/templates from `@wingcraft/parser-heuristics` so every diagnosis includes a safe-first step, evidence to collect, and customer messaging. The pipeline (normalize → detect → extract → score → categorize → respond → escalate) is documented in `docs/phase4-parser.md` and drives both the frontend demo and `@wingcraft/parser`.
+### Ops Lab scenario workflow
+1. `./ops-lab/scripts/prepare-scenario.sh baseline` (or any other scenario name) seeds `wingcraft_paper_configs` with the matching template, prints the `docker compose` command, and prepares the env.
+2. Bring up the lab: `cd ops-lab` and run `docker compose --env-file env/common.env --env-file env/<scenario>.env up`. The Compose file wires named volumes (`wingcraft_paper_world`, `wingcraft_paper_logs`, `wingcraft_paper_configs`) to preserve worlds, logs, and configs across runs.
+3. Follow the `docs/lab-guidance.md` checklist: stop the server, run `ops-lab/scripts/backup.sh`, tail the logs, collect evidence, export logs, and only then apply fixes or updates.
+4. Trigger reproducible signatures via `ops-lab/scripts/fault-injector/run.sh <script>` if you want to replay a log without resetting the entire scenario.
+5. Reset the scenario with the matching helper in `ops-lab/scripts/reset-*.sh`, or run `ops-lab/scripts/archive-reset.sh` to start from a clean slate before reseeding.
 
-## Deploying the frontend
-The workflow at `.github/workflows/pages.yml` builds the Vite app and pushes `frontend/dist` to `gh-pages`. The site is a read-only recruiter demo; all sensitive work is done through the private ops lab.
+### Deployment
+- `frontend/dist` is the only artifact deployed to `gh-pages` via `.github/workflows/pages.yml`. The workflow checks out the repo, installs dependencies under `frontend/`, builds the app, and uses `actions/deploy-pages@v1`.
+- Use `npm run build --workspace frontend` to replicate the workflow locally and confirm `frontend/dist` is production ready.
+
+## Extending the parser
+- Create a custom parser via `createParserEngine` from `@wingcraft/parser-core` and pass a `ParserConfig` that overrides stages (`normalize`, `detectSignature`, `classify`, or `build`) if you want new heuristics, a remote signature store, or a different builder strategy.
+- The parser exposes `runParserPipeline` and all stage interfaces so downstream tooling (tests, alternative UIs, CLI helpers) can plug into exactly the same deterministic pipeline that feeds the frontend and validation script.
+- Use the heuristics and seeded data from `@wingcraft/parser-heuristics` + `@wingcraft/data` to keep messaging, safe-first steps, and escalation flags aligned with the Ops Lab incidents.
+
+## Documentation & walkthroughs
+- `docs/phase4-parser.md` – detailed Phase 4 pipeline narrative and signature library highlights that explain how logs become triage results.
+- `docs/phase3-incidents.md` – catalog of the 15 reproducible incidents, the templates used, and the reset helpers that keep the dataset, UI, and ops lab synchronized.
+- `docs/lab-guidance.md` – safe-first checklist, scenario preparation tips, fault injection toolkit notes, and stretch targets for infrastructure recreations.
+- `docs/walkthrough.md` – story-driven walkthrough that traces a plugin/config conflict from log ingestion to customer communication.
