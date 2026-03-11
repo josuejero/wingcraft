@@ -17,7 +17,9 @@
       "@wingcraft/parser-heuristics": ["../packages/parser-heuristics/src"],
       "@wingcraft/parser-classifier": ["../packages/parser-classifier/src"],
       "@wingcraft/parser-builder": ["../packages/parser-builder/src"],
-      "@wingcraft/parser-core": ["../packages/parser-core/src"]
+      "@wingcraft/parser-core": ["../packages/parser-core/src"],
+      "@wingcraft/parser-utils": ["../packages/parser-utils/src"],
+      "@wingcraft/parser-signatures": ["../packages/parser-signatures/src"]
     },
 
     "moduleResolution": "bundler",

@@ -12,6 +12,8 @@
     { "path": "../types" },
     { "path": "../data" },
     { "path": "../parser-heuristics" },
+    { "path": "../parser-utils" },
+    { "path": "../parser-signatures" },
     { "path": "../parser-classifier" },
     { "path": "../parser-builder" }
   ]
