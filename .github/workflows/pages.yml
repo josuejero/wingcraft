@@ -30,7 +30,10 @@ jobs:
       - name: Build frontend
         run: npm run build --workspace frontend
 
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          build_dir: frontend/dist
+          path: frontend/dist
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
