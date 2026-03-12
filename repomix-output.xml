@@ -3297,48 +3297,6 @@ export type ClassificationSummary = {
 }
 </file>
 
-<file path=".github/workflows/pages.yml">
-name: Deploy Frontend
-
-on:
-  push:
-    branches: [main, master]
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build frontend
-        run: npm run build --workspace frontend
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: frontend/dist
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-</file>
-
 <file path="docs/lab-guidance.md">
 # Ops Lab Guidance
 
@@ -3753,6 +3711,57 @@ export function createClassifier(config: ClassifierConfig): ClassifierFn {
 export * from './normalize.js'
 export * from './match.js'
 export * from './sources.js'
+</file>
+
+<file path=".github/workflows/pages.yml">
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build --workspace frontend
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 </file>
 
 <file path="frontend/src/App.css">
