@@ -1,6 +1,49 @@
 # Wingcraft Triage Lab
 
-Wingcraft Triage Lab is a private operations training environment plus a public-facing parser/triage console built around reproduced PaperMC incidents. The workspace guides recruiters through evidence ingestion, deterministic parsing, safe-first actions, and customer messaging that mirror real incidents seeded in the Ops Lab.
+Wingcraft is an incident-triage support console and parser lab for diagnosing reproduced PaperMC server issues. It combines a React/TypeScript frontend, modular parser packages, seeded incident records, Docker Compose scenarios, safe-first runbooks, and GitHub Pages deployment. This project demonstrates frontend development, parser architecture, rule-based classification, deterministic test data, support tooling, technical documentation, and reproducible incident workflows.
+
+## Quick links
+- **Live demo:** [Wingcraft parser console](https://josuejero.github.io/wingcraft/)
+- **Screenshots:** [public parser console](frontend/public/assets/screenshots/parser-console.png), [parser result proof](frontend/public/assets/screenshots/parser-result.svg), [sample output](frontend/public/assets/screenshots/sample-output.svg)
+- **Test report:** `npm run test`
+- **CI workflow:** `.github/workflows/pages.yml`
+- **Architecture docs:** `docs/phase4-parser.md`, `docs/phase3-incidents.md`, `docs/lab-guidance.md`, `docs/walkthrough.md`
+- **Main code to inspect:** `frontend/src/App.tsx`, `packages/parser/`, `packages/data/incidents.json`, `ops-lab/`
+
+## Employer scan
+**Best fit roles:** Frontend Developer, Technical Support Engineer, Developer Tools Engineer, QA Automation Engineer  
+**Core stack:** React, TypeScript, Vite, parser packages, Docker Compose, GitHub Pages  
+**What this proves:** Support-console UX, parser architecture, rule-based triage, deterministic fixtures, runbooks, reproducible incident workflows  
+**Start here:** `frontend/src/`, `packages/parser/`, `packages/data/`, `docs/phase4-parser.md`
+
+## Screenshot gallery
+| Public parser console | Triage result |
+| --- | --- |
+| ![Wingcraft parser console screenshot](frontend/public/assets/screenshots/parser-console.png) | ![Wingcraft parser result screenshot](frontend/public/assets/screenshots/parser-result.svg) |
+
+![Wingcraft sample parsed output screenshot](frontend/public/assets/screenshots/sample-output.svg)
+
+## Sample parser behavior
+Sample log input:
+
+```text
+[12:04:11 ERROR]: Could not load 'plugins/ChunkGuard.jar' in folder 'plugins'
+org.bukkit.configuration.InvalidConfigurationException: while parsing config.yml
+Caused by: mapping values are not allowed here in 'plugins/ChunkGuard/config.yml'
+```
+
+Sample parsed output:
+
+```json
+{
+  "likelyCause": "Plugin configuration conflict prevents PaperMC startup.",
+  "priority": "P2",
+  "safeFirstStep": "Stop the server, back up the world, preserve logs, then isolate the plugin config.",
+  "customerMessage": "We found a startup failure tied to a plugin configuration file and are preserving evidence before changing server files."
+}
+```
+
+The Docker Compose ops lab is available for reproducing incidents locally, but the public product starts with the browser-based parser console so reviewers can inspect behavior immediately.
 
 ## Repository layout
 - `package.json` / workspace scripts – bootstrap, build/test/lint orchestration, and shared devDependencies.
@@ -23,7 +66,7 @@ The parser is hand-crafted TypeScript with modular packages that can be swapped 
 - `@wingcraft/parser-core` orchestrates the normalization → signature detection → classification → builder pipeline, exposes `ParserPipelineStages`, and lets you override any stage via `ParserConfig`.
 - `@wingcraft/parser` re-exports all of the above plus the CLI-style `validate.ts` runner that walks `seededIncidentRecords` and ensures their label/priority/escalation flags stay aligned with the parser output.
 
-The Phase 4 pipeline is documented in `docs/phase4-parser.md`, so readers can trace how normalized text feeds signatures, how evidence lines are captured, and how the classifier/builder decide on safe-first steps, priority/escallation, and customer messaging.
+The parser pipeline is documented in `docs/phase4-parser.md`, so readers can trace how normalized text feeds signatures, how evidence lines are captured, and how the classifier/builder decide on safe-first steps, priority/escalation, and customer messaging.
 
 ## Data & seeded incidents
 - `packages/data/incident-schema.json` enforces every field produced by the parser and UI.
@@ -81,7 +124,7 @@ The Phase 4 pipeline is documented in `docs/phase4-parser.md`, so readers can tr
 - Use the heuristics and seeded data from `@wingcraft/parser-heuristics` + `@wingcraft/data` to keep messaging, safe-first steps, and escalation flags aligned with the Ops Lab incidents.
 
 ## Documentation & walkthroughs
-- `docs/phase4-parser.md` – detailed Phase 4 pipeline narrative and signature library highlights that explain how logs become triage results.
+- `docs/phase4-parser.md` – detailed parser pipeline narrative and signature library highlights that explain how logs become triage results.
 - `docs/phase3-incidents.md` – catalog of the 15 reproducible incidents, the templates used, and the reset helpers that keep the dataset, UI, and ops lab synchronized.
 - `docs/lab-guidance.md` – safe-first checklist, scenario preparation tips, fault injection toolkit notes, and stretch targets for infrastructure recreations.
 - `docs/walkthrough.md` – story-driven walkthrough that traces a plugin/config conflict from log ingestion to customer communication.
