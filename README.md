@@ -11,12 +11,6 @@ Wingcraft is an incident-triage support console and parser lab for diagnosing re
 - **Architecture docs:** `docs/phase4-parser.md`, `docs/phase3-incidents.md`, `docs/lab-guidance.md`, `docs/walkthrough.md`
 - **Main code to inspect:** `frontend/src/App.tsx`, `packages/parser/`, `packages/data/incidents.json`, `ops-lab/`
 
-## Employer scan
-**Best fit roles:** Frontend Developer, Technical Support Engineer, Developer Tools Engineer, QA Automation Engineer  
-**Core stack:** React, TypeScript, Vite, parser packages, Docker Compose, GitHub Pages  
-**What this proves:** Support-console UX, parser architecture, rule-based triage, deterministic fixtures, runbooks, reproducible incident workflows  
-**Start here:** `frontend/src/`, `packages/parser/`, `packages/data/`, `docs/phase4-parser.md`
-
 ## Project metrics
 Generated from [reports/metrics/latest.json](reports/metrics/latest.json). Seeded parser validation is a regression metric for the fixtures in this repo, not an independent accuracy claim.
 
