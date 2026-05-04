@@ -11,11 +11,31 @@
     "bootstrap": "npm install",
     "build:all": "npm run build --workspaces",
     "build": "npm run build:all",
+    "typecheck": "tsc -b --force",
     "test": "npm run test:parser --workspace @wingcraft/parser",
-    "lint": "npm run lint --workspace frontend"
+    "test:parser": "npm run test:parser --workspace @wingcraft/parser",
+    "test:unit": "vitest run --coverage --reporter=default --reporter=json --outputFile=reports/test-results/vitest.json",
+    "test:e2e": "playwright test",
+    "lint": "npm run lint --workspace frontend",
+    "metrics": "npm run metrics:parser && npm run build --workspace frontend && npm run metrics:build && npm run metrics:project",
+    "metrics:parser": "npm run build --workspace @wingcraft/parser && node scripts/metrics/collect-parser-validation.mjs",
+    "metrics:build": "node scripts/metrics/collect-build-metrics.mjs",
+    "metrics:project": "node scripts/metrics/collect-project-metrics.mjs",
+    "metrics:summary": "node scripts/metrics/write-job-summary.mjs",
+    "lhci": "lhci collect --config=./lighthouserc.cjs && lhci assert --config=./lighthouserc.assertions.cjs && lhci assert --config=./lighthouserc.budgets.cjs && lhci upload --config=./lighthouserc.cjs",
+    "audit:high": "npm audit --audit-level=high",
+    "quality": "npm run typecheck && npm run metrics:parser && npm run test:unit && npm run lint && npm run build --workspace frontend && npm run metrics:build && npm run test:e2e && npm run lhci && npm run audit:high && npm run metrics:project"
   },
   "devDependencies": {
+    "@lhci/cli": "0.15.1",
+    "@playwright/test": "1.59.1",
     "@types/node": "^20.13.0",
-    "typescript": "^5.4.5"
+    "@vitest/coverage-v8": "4.1.5",
+    "typescript": "^5.4.5",
+    "vite": "8.0.10",
+    "vitest": "4.1.5"
+  },
+  "overrides": {
+    "flatted": "3.4.2"
   }
 }

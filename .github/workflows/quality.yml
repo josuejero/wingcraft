@@ -1,0 +1,82 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck workspace
+        run: npm run typecheck
+
+      - name: Generate parser metrics
+        run: npm run metrics:parser
+
+      - name: Run Vitest with coverage
+        run: npm run test:unit
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build --workspace frontend
+
+      - name: Generate bundle metrics
+        run: npm run metrics:build
+
+      - name: Run Playwright smoke tests
+        run: npm run test:e2e
+
+      - name: Run Lighthouse CI
+        run: npm run lhci
+
+      - name: Audit high severity dependencies
+        run: npm run audit:high
+
+      - name: Generate project metrics
+        run: npm run metrics:project
+
+      - name: Write job summary
+        if: always()
+        run: |
+          if [ -f reports/metrics/latest.json ]; then
+            npm run metrics:summary
+          else
+            echo "### Wingcraft quality summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Metrics report: not generated; inspect the failed step above." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload quality artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: wingcraft-quality-artifacts
+          if-no-files-found: ignore
+          path: |
+            reports/metrics
+            reports/test-results
+            reports/lighthouse
+            coverage

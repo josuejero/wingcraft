@@ -6,7 +6,8 @@ Wingcraft is an incident-triage support console and parser lab for diagnosing re
 - **Live demo:** [Wingcraft parser console](https://josuejero.github.io/wingcraft/)
 - **Screenshots:** [public parser console](frontend/public/assets/screenshots/parser-console.png), [parser result proof](frontend/public/assets/screenshots/parser-result.svg), [sample output](frontend/public/assets/screenshots/sample-output.svg)
 - **Test report:** `npm run test`
-- **CI workflow:** `.github/workflows/pages.yml`
+- **Metrics report:** [reports/metrics/latest.md](reports/metrics/latest.md), [docs/metrics.md](docs/metrics.md)
+- **CI workflows:** `.github/workflows/quality.yml`, `.github/workflows/pages.yml`
 - **Architecture docs:** `docs/phase4-parser.md`, `docs/phase3-incidents.md`, `docs/lab-guidance.md`, `docs/walkthrough.md`
 - **Main code to inspect:** `frontend/src/App.tsx`, `packages/parser/`, `packages/data/incidents.json`, `ops-lab/`
 
@@ -15,6 +16,22 @@ Wingcraft is an incident-triage support console and parser lab for diagnosing re
 **Core stack:** React, TypeScript, Vite, parser packages, Docker Compose, GitHub Pages  
 **What this proves:** Support-console UX, parser architecture, rule-based triage, deterministic fixtures, runbooks, reproducible incident workflows  
 **Start here:** `frontend/src/`, `packages/parser/`, `packages/data/`, `docs/phase4-parser.md`
+
+## Project metrics
+Generated from [reports/metrics/latest.json](reports/metrics/latest.json). Seeded parser validation is a regression metric for the fixtures in this repo, not an independent accuracy claim.
+
+| Metric | Current result |
+| --- | ---: |
+| Parser seeded incident validation | 15/15 passed |
+| Diagnosis labels covered | 5 |
+| Priority tiers covered | P0, P1, P2 |
+| Escalation cases | 6 |
+| TypeScript workspace packages | 9 |
+| Source/doc/config files | 172 |
+| Nonblank source/doc/config lines | 4,698 |
+| Signature patterns / regex matchers | 6 / 32 |
+| Ops-lab incident manifests | 17 |
+| Frontend JS bundle | 68.43 kB gzip |
 
 ## Screenshot gallery
 | Public parser console | Triage result |
@@ -46,12 +63,13 @@ Sample parsed output:
 The Docker Compose ops lab is available for reproducing incidents locally, but the public product starts with the browser-based parser console so reviewers can inspect behavior immediately.
 
 ## Repository layout
-- `package.json` / workspace scripts – bootstrap, build/test/lint orchestration, and shared devDependencies.
+- `package.json` / workspace scripts – root `npm ci`, build/test/lint/metrics orchestration, and shared devDependencies.
 - `packages/` – monorepo packages that build the parser pipeline, seeded data, and shared types. See the module list under **Parser architecture** below for how they connect.
 - `frontend/` – React + Vite demo that plugs straight into `@wingcraft/parser`, shows sample incidents, and exports `frontend/dist` for GitHub Pages deployment.
 - `ops-lab/` – Docker Compose lab, reusable configs, scenario manifests, and scripts for safe-first steps, fault injection, and reset helpers.
 - `docs/` – written guidance, catalogs, and walkthroughs grounding every workflow in the new recruit training narrative.
-- `.github/workflows/pages.yml` – builds `frontend/dist` and pushes it to `gh-pages`.
+- `.github/workflows/quality.yml` – runs typecheck, parser metrics, Vitest, lint, frontend build, Playwright, Lighthouse, and high-severity audit checks.
+- `.github/workflows/pages.yml` – validates parser fixtures, builds `frontend/dist`, and deploys it through GitHub Pages.
 
 ## Parser architecture
 The parser is hand-crafted TypeScript with modular packages that can be swapped or reused independently:
@@ -94,17 +112,22 @@ The parser pipeline is documented in `docs/phase4-parser.md`, so readers can tra
 - Docker & Docker Compose for the ops lab.
 
 ### Workspace bootstrap
-1. Run `npm run bootstrap` to install all workspace dependencies (hoisted via the root `package.json`).
+1. Run `npm ci` to install all workspace dependencies from the root lockfile.
 2. Build the TypeScript packages with `npm run build:all` or `npm run build`.
 3. Run `npm run test` to execute `@wingcraft/parser/src/validate.ts`, which ensures the parser still agrees with every seeded incident’s label, priority, and escalation flag.
+4. Run `npm run metrics` to rebuild the frontend and refresh `reports/metrics/latest.json` plus `reports/metrics/latest.md`.
 
 ### Parser validation & tooling
 - `npm run test` (aliases to `@wingcraft/parser:test:parser`) runs the validation script over `seededIncidentRecords`.
 - `npm run lint` currently targets the frontend ESLint config; keep the React/TypeScript linting rules aligned with `frontend/eslint.config.js`.
+- `npm run test:unit` runs Vitest with V8 coverage and 70% global thresholds.
+- `npm run test:e2e` runs Playwright smoke tests against the built frontend preview.
+- `npm run lhci` runs Lighthouse CI against `frontend/dist`.
+- `npm run quality` runs the local quality gate sequence used by CI.
 
 ### Frontend development
 1. `cd frontend`
-2. `npm install` (if not already bootstrapped) and `npm run dev` to launch the Vite dev server.
+2. Run `npm run dev` to launch the Vite dev server after the root `npm ci` install.
 3. Use `npm run build` to produce `frontend/dist`, and optionally `npm run preview` to serve the build locally before a GH Pages release.
 
 ### Ops Lab scenario workflow
@@ -115,7 +138,7 @@ The parser pipeline is documented in `docs/phase4-parser.md`, so readers can tra
 5. Reset the scenario with the matching helper in `ops-lab/scripts/reset-*.sh`, or run `ops-lab/scripts/archive-reset.sh` to start from a clean slate before reseeding.
 
 ### Deployment
-- `frontend/dist` is the only artifact deployed to `gh-pages` via `.github/workflows/pages.yml`. The workflow checks out the repo, installs dependencies under `frontend/`, builds the app, and uses `actions/deploy-pages@v1`.
+- `frontend/dist` is the only artifact deployed through `.github/workflows/pages.yml`. The workflow checks out the repo, installs dependencies from the root lockfile, validates parser fixtures, builds the app, uploads the Pages artifact, and deploys with GitHub Pages actions.
 - Use `npm run build --workspace frontend` to replicate the workflow locally and confirm `frontend/dist` is production ready.
 
 ## Extending the parser

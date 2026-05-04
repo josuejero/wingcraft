@@ -7,11 +7,29 @@ frontend/node_modules/
 dist/
 packages/*/dist/
 frontend/dist/
+*.tsbuildinfo
+packages/*/tsconfig.tsbuildinfo
 
 # Ops lab artifacts
 ops-lab/logs/
 ops-lab/backups/
 
+# Metrics, test, coverage, and audit artifacts
+coverage/
+playwright-report/
+test-results/
+reports/
+!reports/
+reports/**
+!reports/metrics/
+reports/metrics/**
+!reports/metrics/latest.json
+!reports/metrics/latest.md
+.lighthouseci/
+
 # IDE files
 .vscode/
 .DS_Store
+
+# Generated repo snapshots
+repomix-output.xml

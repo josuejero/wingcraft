@@ -211,6 +211,7 @@ function App() {
             </button>
             <input
               ref={fileInputRef}
+              data-testid="log-file-input"
               type="file"
               accept=".log,.txt,text/plain"
               onChange={handleFileChange}
@@ -219,12 +220,14 @@ function App() {
           </div>
         </div>
         <textarea
+          aria-label="Log input"
+          data-testid="log-input"
           value={logInput}
           onChange={(event) => setLogInput(event.target.value)}
           placeholder="Paste latest.log, stack trace, or console output."
         />
         <div className="actions">
-          <button onClick={() => parseGivenInput(logInput)}>Parse logs</button>
+          <button data-testid="parse-logs" onClick={() => parseGivenInput(logInput)}>Parse logs</button>
           {error && <span className="error">{error}</span>}
         </div>
         <p className="upload-hint">The parser runs entirely in-browser; no data leaves your session.</p>
@@ -241,7 +244,7 @@ function App() {
         <div className="diagnosis-grid">
           <article>
             <h3>Category</h3>
-            <p className="field-value">{result?.category ?? '–'}</p>
+            <p data-testid="diagnosis-category" className="field-value">{result?.category ?? '–'}</p>
             <p className="muted">Affected component: {result?.affectedComponent ?? 'unknown'}</p>
           </article>
           <article>
@@ -306,7 +309,10 @@ function App() {
               )}
             </ul>
           </article>
-          <article className={`escalation-pill ${result?.escalate ? 'escalate' : 'resolved'}`}>
+          <article
+            data-testid="escalation-status"
+            className={`escalation-pill ${result?.escalate ? 'escalate' : 'resolved'}`}
+          >
             <h3>Escalation</h3>
             <p>{result?.escalate ? 'Elevate to on-call' : 'Handle at frontline'}</p>
             <p className="muted">Priority: {result?.priority ?? '–'}</p>
@@ -324,7 +330,7 @@ function App() {
             <button type="button" onClick={handleCopyReply} disabled={!result}>
               Copy reply
             </button>
-            {copyStatus && <span className="copy-status">{copyStatus}</span>}
+            {copyStatus && <span data-testid="copy-status" className="copy-status">{copyStatus}</span>}
           </div>
         </div>
         <pre className="reply-block">{customerReply}</pre>

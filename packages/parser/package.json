@@ -13,7 +13,7 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b --force",
     "test:parser": "npm run build && node ./dist/validate.js"
   },
   "dependencies": {

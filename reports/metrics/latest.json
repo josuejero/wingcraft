@@ -1,0 +1,72 @@
+{
+  "project": "Wingcraft",
+  "generatedAt": "2026-05-04T19:19:16.456Z",
+  "git": {
+    "sha": "c4783cb",
+    "branch": "master"
+  },
+  "scope": {
+    "workspacePackages": 9,
+    "frontendApps": 1,
+    "sourceDocConfigFiles": 172,
+    "nonblankLines": 4698
+  },
+  "parserValidation": {
+    "seededIncidents": 15,
+    "passed": 15,
+    "failed": 0,
+    "passRate": 1,
+    "labelMatchRate": 1,
+    "priorityMatchRate": 1,
+    "escalationMatchRate": 1,
+    "evidenceCaptureRate": 1,
+    "confidence": {
+      "min": 0.45,
+      "max": 0.9,
+      "average": 0.6633
+    }
+  },
+  "incidentDataset": {
+    "seededIncidents": 15,
+    "labels": {
+      "plugin/config conflict": 5,
+      "startup error": 5,
+      "likely infrastructure issue": 3,
+      "version mismatch": 1,
+      "needs escalation": 1
+    },
+    "priorities": {
+      "P1": 9,
+      "P2": 5,
+      "P0": 1
+    },
+    "escalationCases": 6
+  },
+  "signatureLibrary": {
+    "patterns": 6,
+    "regexMatchers": 32
+  },
+  "opsLab": {
+    "envFiles": 18,
+    "incidentManifests": 17,
+    "resetScripts": 15,
+    "faultInjectionScripts": 19
+  },
+  "frontendBuild": {
+    "status": "passed",
+    "jsKb": 220.62,
+    "jsGzipKb": 68.43,
+    "cssKb": 4.83,
+    "cssGzipKb": 1.58,
+    "totalKb": 715.88,
+    "totalGzipKb": 547.65
+  },
+  "qualityGates": {
+    "lint": "recorded in CI",
+    "unitCoverage": "96.55% lines",
+    "playwright": "passed",
+    "lighthouse": "passed",
+    "dependencyAudit": "high severity gate configured",
+    "openssfScorecard": "recorded in GitHub Actions"
+  }
+}

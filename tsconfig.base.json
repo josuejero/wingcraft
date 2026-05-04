@@ -3,6 +3,18 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "baseUrl": ".",
+    "paths": {
+      "@wingcraft/data": ["packages/data/src/index.ts"],
+      "@wingcraft/parser": ["packages/parser/src/index.ts"],
+      "@wingcraft/parser-builder": ["packages/parser-builder/src/index.ts"],
+      "@wingcraft/parser-classifier": ["packages/parser-classifier/src/index.ts"],
+      "@wingcraft/parser-core": ["packages/parser-core/src/index.ts"],
+      "@wingcraft/parser-heuristics": ["packages/parser-heuristics/src/index.ts"],
+      "@wingcraft/parser-signatures": ["packages/parser-signatures/src/index.ts"],
+      "@wingcraft/parser-utils": ["packages/parser-utils/src/index.ts"],
+      "@wingcraft/types": ["packages/types/src/index.ts"]
+    },
     "lib": ["ES2022"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -10,5 +22,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "strict": true
-  }
+  },
+  "exclude": ["**/*.test.ts", "**/*.spec.ts"]
 }
